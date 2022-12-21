@@ -159,10 +159,6 @@ Route::get('/StudentInstructor/{id}','InstructorController@StudentInstructor');
 //-----------  add Instructor by excel --------------
 Route::post('/instructorImport','InstructorController@instructorImport');
 
-// --------- training Categories --------------
-Route::resource('trainingCategories', 'TrainingCategoryController');
-Route::get('/trainingCategory/{id}','TrainingCategoryController@trainingCategory');
-
 // --------- training Diplomas --------------
 Route::resource('trainingDiplomas', 'TrainingDiplomaController');
 Route::get('/trainingDiploma/{id}','TrainingDiplomaController@trainingDiploma');
@@ -195,32 +191,10 @@ Route::put('/changeRole','EmployeeController@changeRole');
 
 // ============= Commission Management ==============================================================================
 
-Route::resource('CommissionManagement', 'CommissionManagementController');
+Route::resource('commission', 'CommissionManagementController');
 
 // --------- get Corporation --------------
 Route::get('/getCorporation','CommissionManagementController@getCorporation');
-
-// --------- Sales Commission Plan Levels --------------
-Route::resource('SalesCommissionPlan', 'CommissionPlanLevelsController');
-
-// --------- Sales Commission Plan Levels --------------
-Route::get('/getCommissionPlanLevels/{id}','CommissionPlanLevelsController@getCommissionPlanLevels');
-
-// ============= Sales Team Targets ==============================================================================
-
-Route::resource('salesTargets', 'SalesTargetController');
-
-//----------- get sales employee --------------
-Route::get('/salesEmployee','SalesTargetController@salesEmployee');
-
-//----------- Sales Team Targets Details--------------
-Route::resource('salesTargetDetails', 'SalesTargetDetailsController');
-
-//----------- get Sales Team Targets Details --------------
-Route::get('/salesTeamTargetsDetails/{id}','SalesTargetDetailsController@salesTeamTargetsDetails');
-
-//----------- get Sales Target --------------
-Route::get('/getSalesTarget','SalesTargetDetailsController@getSalesTarget');
 
 // =================== Country ================================================================================
 
@@ -257,14 +231,14 @@ Route::put('/movingLeadToAnotherEmployee/{id}','LeadController@movingLeadToAnoth
 //----------- import lead by excel --------------
 Route::post('/leadImport','LeadController@leadImport');
 
-//----------- add to list --------------
-Route::post('/addList','LeadController@addList');
-
 //----------- get 10 lead to employee --------------
 Route::get('/getTenLead/{id}','LeadController@getTenLeadToEmployee');
 
 //----------- get leads by employee id--------------
 Route::get('/getLeadsEmployee/{id}','LeadController@getLeadsEmployee');
+
+//----------- get leads by employee id--------------
+Route::get('/getLeadsOpenTaskEmployee/{id}','LeadController@getLeadsOpenTaskEmployee');
 
 //----------- get leads by employee id to Register track --------------
 Route::get('/getLeadsRegisterTrackEmployee/{id}','LeadController@getLeadsRegisterTrackEmployee');
@@ -284,17 +258,6 @@ Route::get('/activationLeadsFollowup/{id}','LeadsFollowupController@activationLe
 Route::get('/getActiveLeadsFollowup','LeadsFollowupController@getActiveLeadsFollowup');
 Route::get('/getDeactivateLeadsFollowup','LeadsFollowupController@getDeactivateLeadsFollowup');
 
-//----------- Reason --------------
-Route::resource('reason', 'ReasonController');
-
-//----------- get reason by leads followup id --------------
-Route::get('/reasonsLeadsFollowup/{id}','ReasonController@reasonsLeadsFollowup');
-
-//----------- activation Reason --------------
-Route::get('/activationReason/{id}','ReasonController@activationReason');
-Route::get('/getActiveReason','ReasonController@getActiveReason');
-Route::get('/getDeactivateReason','ReasonController@getDeactivateReason');
-
 //----------- lead activity  --------------
 Route::resource('leadActivity', 'LeadActivityController');
 
@@ -304,9 +267,6 @@ Route::get('/getIndividualDeals','DealIndividualPlacementTestController@getIndiv
 
 //----------- get Placement Test Deals By Employee Id --------------
 Route::get('/getPlacementTestDealsByEmployeeId/{id}','DealIndividualPlacementTestController@getPlacementTestDealsByEmployeeId');
-
-//----------- get lead by followup id and employee id --------------
-Route::get('/getLeadFollowUpEmployee/{followup_id}/{employee_id}','LeadActivityController@getLeadFollowUpEmployee');
 
 //----------- get lead interview by employee id --------------
 Route::get('/getLeadInterviewEmployee/{id}','LeadActivityController@getLeadInterviewEmployee');
@@ -319,6 +279,9 @@ Route::get('/goInterviewSales/{id}','LeadActivityController@goInterviewSales');
 
 //----------- go Interview Sales --------------
 Route::get('/goCourseSales/{id}','LeadActivityController@goCourseSales');
+
+//----------- close activity --------------
+Route::post('/closeTask','LeadActivityController@closeTask');
 
 // ================== Company Management ============================================================
 
@@ -342,26 +305,26 @@ Route::post('/companyLeadsNew','CompanyLeadController@companyLeadsNew');
 //----------- Moving companies to another Employee --------------
 Route::put('/movingCompanyToAnotherEmployee/{id}','CompanyController@movingCompanyToAnotherEmployee');
 
-//----------- add to list --------------
-Route::post('/addListCompany','CompanyController@addListCompany');
-
 //----------- get 10 companies to employee --------------
 Route::get('/getTenCompanyToEmployee/{id}','CompanyController@getTenCompanyToEmployee');
 
 //----------- get companies by employee id--------------
 Route::get('/getCompaniesEmployee/{id}','CompanyController@getCompaniesEmployee');
 
+//----------- get companies Open Task by employee id--------------
+Route::get('/getCompaniesOpenTaskEmployee/{id}','CompanyController@getCompaniesOpenTaskEmployee');
+
 //----------- company activity  --------------
 Route::resource('companyActivity', 'CompanyActivityController');
-
-//----------- get company by followup id and employee id --------------
-Route::get('/getCompanyFollowUpEmployee/{followup_id}/{employee_id}','CompanyActivityController@getCompanyFollowUpEmployee');
 
 //----------- get lead interview by employee id and company id --------------
 Route::get('/getLeadInterviewByEmployeeIdAndCompanyId/{employee_id}/{company_id}','CompanyActivityController@getLeadInterviewByEmployeeIdAndCompanyId');
 
 //----------- get lead courses by employee id and company id --------------
 Route::get('/getLeadCourseByEmployeeIdAndCompanyId/{employee_id}/{company_id}','CompanyActivityController@getLeadCourseByEmployeeIdAndCompanyId');
+
+//----------- close Task Company  --------------
+Route::post('closeTaskCompany', 'CompanyActivityController@closeTaskCompany');
 
 //----------- add deal placement test to lead in company --------------
 Route::post('/dealCompanyPlacementTest','DealCompanyPlacementTestController@store');
@@ -389,17 +352,6 @@ Route::resource('companiesFollowup', 'CompanyFollowupController');
 Route::get('/activationCompanyFollowup/{id}','CompanyFollowupController@activationCompanyFollowup');
 Route::get('/getActiveCompanyFollowup','CompanyFollowupController@getActiveCompanyFollowup');
 Route::get('/getDeactivateCompaniesFollowup','CompanyFollowupController@getDeactivateCompaniesFollowup');
-
-//----------- Company Reason --------------
-Route::resource('companyReason', 'CompanyFollowupReasonController');
-
-//----------- get reason by companies followup id --------------
-Route::get('/reasonsCompaniesFollowup/{id}','CompanyFollowupReasonController@reasonsCompaniesFollowup');
-
-//----------- activation Company Reason --------------
-Route::get('/activationCompanyReason/{id}','CompanyFollowupReasonController@activationCompanyReason');
-Route::get('/getActiveCompanyReason','CompanyFollowupReasonController@getActiveCompanyReason');
-Route::get('/getDeactivateCompanyReason','CompanyFollowupReasonController@getDeactivateCompanyReason');
 
 // ============= exam Types Management ==============================================================================
 
@@ -969,4 +921,86 @@ Route::post('evaluationAnswer/{evaluation_id}/{lead_id}', 'EvaluationStudentCont
 
 //----------- Evaluation report --------------
 Route::get('evaluationReport/{id}', 'EvaluationReportController@evaluationReport');
+
+// ================== assets Type ============================================================
+
+Route::resource('assetsType', 'AssetsTypeController');
+
+// ================== offices ============================================================
+
+Route::resource('office', 'OfficeController');
+
+// ================== branch ============================================================
+
+Route::resource('branch', 'BranchController');
+
+// ================== branch ============================================
+
+Route::resource('assets', 'AssetController');
+
+// ================== delivery Type ======================================
+
+Route::resource('deliveryType', 'DeliveryTypeController');
+
+// ================== militaries =========================================
+
+Route::get('militaries', 'MilitaryController@index');
+
+// ================== Commission Type =====================================
+
+Route::get('commissionType', 'ComitionTypeController@index');
+
+// ================== per =================================================
+
+Route::get('per', 'PerController@index');
+
+// ================== currency ======================================
+
+Route::resource('currency', 'CurrencyController');
+
+// ================== availability ======================================
+
+Route::resource('availability', 'AvailabilityController');
+
+// ================== Instructor Per ======================================
+
+Route::resource('instructorPer', 'InstructorPerController');
+
+// ================== course track initial ======================================
+
+Route::resource('initialCourse', 'CourseTrackInitialController');
+
+//----------- update Initial Course Price by course track id --------------
+Route::post('/updateInitialCoursePrice/{id}','CourseTrackInitialController@updateInitialCoursePrice');
+
+//----------- get drop down initial course track by vendor id --------------
+Route::get('/dropdownsInitialCourse/{id}','CourseTrackInitialController@dropdownsInitialCourse');
+
+//----------- Initial course track schedule --------------
+Route::resource('initialCourseSchedule', 'CourseTrackInitialScheduleController');
+
+//----------- get schedule by course track id --------------
+Route::get('/getInitialScheduleByCourseTrackId/{id}','CourseTrackInitialScheduleController@getInitialScheduleByCourseTrackId');
+
+// ================== diploma track initial ======================================
+
+Route::resource('initialDiploma', 'DiplomaTrackInitialController');
+
+//----------- update Initial Diploma Price by course track id --------------
+Route::post('/updateInitialDiplomaPrice/{id}','DiplomaTrackInitialController@updateInitialDiplomaPrice');
+
+//----------- get drop down initial course track by vendor id --------------
+Route::get('/dropdownsInitialDiploma/{id}','DiplomaTrackInitialController@dropdownsInitialDiploma');
+
+//----------- Initial diploma track schedule --------------
+Route::resource('initialDiplomaSchedule', 'DiplomaTrackInitialScheduleController');
+
+//----------- get initial schedule by diploma track id --------------
+Route::get('/getInitialScheduleByDiplomaTrackId/{id}','DiplomaTrackInitialScheduleController@getInitialScheduleByDiplomaTrackId');
+
+//----------- subject --------------
+Route::resource('subject', 'SubjectController');
+
+//----------- get drop down initial course track by vendor id --------------
+Route::get('/materials','MaterialController@index');
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseMaterial;
 use App\Models\CoursePrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -15,7 +16,9 @@ class CoursePricesController extends Controller
      */
     public function coursePrice($id)
     {
-        $coursePrices = CoursePrice::findOrFail($id);
+        $coursePrices = CoursePrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->findOrFail($id);
         return response()->json($coursePrices);
     }
 
@@ -24,21 +27,17 @@ class CoursePricesController extends Controller
      */
     public function coursePriceNow($id)
     {
-        $coursePrices = CoursePrice::where('course_id',$id)->get();
+        $coursePrices = CoursePrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('course_id',$id)
+            ->whereDate('from_date','<=',now())
+            ->whereDate('active_date','>=',now())->first();
 
-        $data=[];
-        $date = Carbon::now()->toDateString();
-
-        if(count($coursePrices) > 0)
+        if (!$coursePrices)
         {
-            foreach ($coursePrices as $coursePrice)
-            {
-                if ($coursePrice->active_date >= $date)
-                {
-                    $data[] = $coursePrice;
-                    return response()->json($data);
-                }
-            }
+            $coursePrices = CoursePrice::with(['materials'=>function($q){
+                $q->with('material');
+            }])->where('course_id',$id)->get()->last();
         }
 
         return response()->json($coursePrices);
@@ -54,16 +53,26 @@ class CoursePricesController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'course_id' => 'required|exists:courses,id',
-            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            'active_date' => 'required|date',
+            'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'private' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'online' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'protocol' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate_group' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'official' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_cd' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_flash_memory' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'hard_copy' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'lab_virtual' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'membership_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'application_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'exam_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'block_note' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'pen' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'from_date' => 'required',
+            'active_date' => 'required',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -78,6 +87,13 @@ class CoursePricesController extends Controller
 
         $coursePrices = new CoursePrice($request_data);
         $coursePrices->save();
+//        foreach ($request['materials'] as $material){
+//            CourseMaterial::create([
+//                'course_price_id' => $coursePrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($coursePrices);
     }
@@ -90,7 +106,9 @@ class CoursePricesController extends Controller
      */
     public function show($id)
     {
-        $coursePrices = CoursePrice::where('course_id',$id)->get();
+        $coursePrices = CoursePrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('course_id',$id)->get();
 
         return response()->json($coursePrices);
 
@@ -105,21 +123,31 @@ class CoursePricesController extends Controller
      */
     public function update(Request $request, $id)
     {
-
         $validator = Validator::make($request->all(), [
-
             'course_id' => 'required|exists:courses,id',
-            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            'active_date' => 'required|date',
-
+            'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'private' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'online' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'protocol' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate_group' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'official' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_cd' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_flash_memory' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'hard_copy' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'lab_virtual' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'membership_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'application_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'exam_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'block_note' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'pen' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'from_date' => 'required',
+            'active_date' => 'required',
+            'materials' => 'required|array',
+            'materials.*.material_id' => 'required|exists:materials,id',
+            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
@@ -134,6 +162,17 @@ class CoursePricesController extends Controller
 
         $coursePrices = CoursePrice::findOrFail($id);
         $coursePrices->update($request_data);
+//        foreach ($coursePrices->materials as $item){
+//            $item->delete();
+//        }
+//
+//        foreach ($request['materials'] as $material){
+//            CourseMaterial::create([
+//                'course_price_id' => $coursePrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($coursePrices);
     }

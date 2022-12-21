@@ -15,7 +15,7 @@ class LabController extends Controller
      */
     public function index()
     {
-        $labs = Lab::all();
+        $labs = Lab::with('branch')->get();
         return response()->json($labs);
     }
 
@@ -28,12 +28,11 @@ class LabController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:labs',
-            'lab_capacity' => 'required|integer',
-            'hour_cost' => 'required',
-            'computer_required' => 'required|boolean',
-//            'pc_count' => 'required|integer',
-//            'laptop_count' => 'required|integer',
+            'name' => 'required|string|max:100',
+            'seats_capacity' => 'required|numeric',
+            'pcs_capacity' => 'required|numeric',
+            'area_dimensions' => 'required|string',
+            'branch_id' => 'required|exists:branches,id',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -41,12 +40,10 @@ class LabController extends Controller
         }
         $lab = Lab::create([
            'name' => $request->name,
-           'lab_capacity' => $request->lab_capacity,
-           'hour_cost' => $request->hour_cost,
-           'computer_required' => $request->computer_required,
-           'pc_count' => $request->pc_count,
-           'laptop_count' => $request->laptop_count,
-
+           'seats_capacity' => $request->seats_capacity,
+           'pcs_capacity' => $request->pcs_capacity,
+           'area_dimensions' => $request->area_dimensions,
+           'branch_id' => $request->branch_id,
         ]);
         return response()->json($lab);
     }
@@ -59,7 +56,7 @@ class LabController extends Controller
      */
     public function show($id)
     {
-        $lab = Lab::findOrFail($id);
+        $lab = Lab::with('branch')->findOrFail($id);
 
         return response()->json($lab);
     }
@@ -75,11 +72,10 @@ class LabController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100',
-            'lab_capacity' => 'required|integer',
-            'hour_cost' => 'required',
-            'computer_required' => 'required|boolean',
-//            'pc_count' => 'required|integer',
-//            'laptop_count' => 'required|integer',
+            'seats_capacity' => 'required|numeric',
+            'pcs_capacity' => 'required|numeric',
+            'area_dimensions' => 'required|string',
+            'branch_id' => 'required|exists:branches,id',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -88,12 +84,10 @@ class LabController extends Controller
         $lab = Lab::findOrFail($id);
         $lab->update([
             'name' => $request->name,
-            'lab_capacity' => $request->lab_capacity,
-            'hour_cost' => $request->hour_cost,
-            'computer_required' => $request->computer_required,
-            'pc_count' => $request->pc_count,
-            'laptop_count' => $request->laptop_count,
-
+            'seats_capacity' => $request->seats_capacity,
+            'pcs_capacity' => $request->pcs_capacity,
+            'area_dimensions' => $request->area_dimensions,
+            'branch_id' => $request->branch_id,
         ]);
 
         return response()->json($lab);

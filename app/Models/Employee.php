@@ -7,25 +7,30 @@ use Illuminate\Database\Eloquent\Model;
 class Employee extends Model
 {
     protected $fillable = [
-        'first_name',
-        'middle_name',
-        'last_name',
-        'phone',
-        'address',
-        'department_id',
-        'salary',
-        'National_ID',
+        'name_en',
+        'name_ar',
         'mobile',
-        'birth_date',
-        'hiring_date',
+        'mobile_two',
+        'email',
+        'email_two',
         'job_id',
+        'department_id',
+        'pdf',
+        'hiring_date',
+        'date_of_resignation',
+        'insurance_number',
+        'ID_number',
+        'birth_date',
+        'military_id',
+        'relation_status',
+        'name_of_company_insurance',
+        'salary',
         'img',
         'user_id',
+        'branch_id',
         'has_account',
         'active',
         'admin',
-        'graduation_year',
-        'eduction',
     ];
 
     protected $appends = [
@@ -39,6 +44,13 @@ class Employee extends Model
     public function getImagePathAttribute(): string
     {
         return asset('uploads/employee/'.$this->img);
+    }
+
+    //append pdf path
+
+    public function getPdfPathAttribute(): string
+    {
+        return asset('uploads/employee/'.$this->pdf);
     }
 
     //===============================================================
@@ -63,11 +75,6 @@ class Employee extends Model
     public function job(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Job::class,'job_id');
-    }
-
-    public function targetEmployees(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(TargetEmployees::class);
     }
 
     public function leadActivities(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -180,16 +187,6 @@ class Employee extends Model
         return $this->hasMany(SalesTreasury::class,'sales_man_id');
     }
 
-    public function salesComissionPlan(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(SalesComissionPlan::class);
-    }
-
-    public function comissionManagement(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(ComissionManagement::class);
-    }
-
     public function companyPayment(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(CompanyPayment::class);
@@ -203,6 +200,21 @@ class Employee extends Model
     public function CompanyInvoiceAccountant(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(CompanyInvoice::class,'accountant_id');
+    }
+
+    public function assets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Asset::class,'employee_id');
+    }
+
+    public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Branch::class,'branch_id');
+    }
+
+    public function commissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Commission::class,'commission_employees','employee_id','commission_id','id','id');
     }
 
 

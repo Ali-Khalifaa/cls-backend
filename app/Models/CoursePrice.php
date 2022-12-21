@@ -26,6 +26,8 @@ class CoursePrice extends Model
         'block_note',
         'pen',
         'training_kit',
+        'from_date',
+        'active_date',
     ];
 
     //relations
@@ -33,5 +35,10 @@ class CoursePrice extends Model
     public function course(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Course::class,'course_id');
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(CourseMaterial::class);
     }
 }

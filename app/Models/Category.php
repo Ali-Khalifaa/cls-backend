@@ -38,12 +38,12 @@ class Category extends Model
 
     public function traningDiplomas(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(TraningDiploma::class);
+        return $this->hasMany(TrainingDiploma::class);
     }
 
     public function traningCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(TraningCourse::class);
+        return $this->hasMany(TrainingCourse::class);
     }
 
     public function leadCourses(): \Illuminate\Database\Eloquent\Relations\HasMany

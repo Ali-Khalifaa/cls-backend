@@ -17,7 +17,10 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $companies = Company::with(['companyContacts','leadSource','companyDeals','companyActivities','employee','leads','companyFollowup'])->where([
+        $companies = Company::with(['companyContacts','leadSource','companyDeals','companyActivities','employee','leads','companyFollowup'
+            ,'companyActivities'=>function($q){
+            $q->with(['subject','employees']);
+        }])->where([
             ['is_client',0],
             ['add_placement',0],
         ])->get();
@@ -69,8 +72,10 @@ class CompanyController extends Controller
      */
     public function show($id)
     {
-        $company = Company::with(['companyContacts','leadSource','leads','companyActivities','employee','companyFollowup'])
-            ->findOrFail($id);
+        $company = Company::with(['companyContacts','leadSource','leads','companyActivities','employee','companyFollowup',
+            'companyActivities'=>function($q){
+            $q->with(['subject','employees']);
+        }])->findOrFail($id);
 
         return response()->json($company);
     }
@@ -210,40 +215,37 @@ class CompanyController extends Controller
     }
 
     /**
-     * add to list Company
-     */
-
-    public function addListCompany(Request $request)
-    {
-        $leads = Company::findOrFail($request->company_id);
-        $leads->update([
-            'add_list' => 1,
-            'company_followup_id' => 1,
-        ]);
-
-        CompanyActivity::create([
-            'follow_up' => now(),
-            'company_followup_id' => 1,
-            'company_id' =>$request->company_id,
-            'employee_id' =>$request->employee_id,
-        ]);
-
-        return response()->json("companies add to list");
-    }
-
-    /**
      * get companies by employee id
      */
 
     public function getCompaniesEmployee($id)
     {
-        $leads = Company::with(['companyContacts','leadSource','leads','companyActivities','employee','companyFollowup'])
+        $leads = Company::with(['companyContacts','leadSource','leads','companyActivities'=>function($q){
+            $q->with(['subject','employees']);
+        },'employee','companyFollowup'])
             ->where([
             ['employee_id','=',$id],
             ['add_list','=',0],
             ['is_client','=',0],
-            ['add_placement','=',0],
         ])->get();
+
+        return response()->json($leads);
+    }
+
+    /**
+     * get companies Open Task by employee id
+     */
+
+    public function getCompaniesOpenTaskEmployee($id)
+    {
+        $leads = Company::with(['companyContacts','leadSource','leads','companyActivities'=>function($q){
+            $q->with(['subject','employees']);
+        },'employee','companyFollowup'])
+            ->where([
+                ['employee_id','=',$id],
+                ['add_list','=',1],
+                ['is_client','=',0],
+            ])->get();
 
         return response()->json($leads);
     }

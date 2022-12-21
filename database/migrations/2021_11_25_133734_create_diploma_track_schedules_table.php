@@ -20,7 +20,7 @@ class CreateDiplomaTrackSchedulesTable extends Migration
             $table->bigInteger('course_id')->unsigned()->nullable();
             $table->bigInteger('lab_id')->unsigned()->nullable();
             $table->bigInteger('diploma_id')->unsigned()->nullable();
-            $table->bigInteger('instructor_id')->unsigned();
+            $table->bigInteger('instructor_id')->unsigned()->nullable();
             $table->bigInteger('day_id')->unsigned();
             $table->date('date');
             $table->boolean('active')->default(1);

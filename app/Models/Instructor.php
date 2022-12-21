@@ -7,16 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Instructor extends Model
 {
     protected $fillable = [
-        'first_name',
-        'middle_name',
-        'last_name',
+        'name',
         'mobile',
-        'address',
         'phone',
-        'cv',
+        'email',
+        'email_two',
+        'cls_rate',
+        'pdf',
         'img',
-        'hour_price',
-        'birth_date',
         'user_id',
         'has_account',
         'active'
@@ -24,7 +22,7 @@ class Instructor extends Model
 
     protected $appends = [
         'image_path',
-        'cv_path',
+        'pdf_path',
         'course_track',
         'diploma_track',
         'training_lectures',
@@ -44,9 +42,9 @@ class Instructor extends Model
 
     //append cv path
 
-    public function getCvPathAttribute(): string
+    public function getPdfPathAttribute(): string
     {
-        return asset('uploads/instructor/cv/'.$this->cv);
+        return asset('uploads/instructor/pdf/'.$this->pdf);
     }
 
     //append count course track
@@ -147,14 +145,14 @@ class Instructor extends Model
         return $this->hasMany(TraningCategory::class);
     }
 
-    public function traningDiplomas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function trainingDiplomas(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(TraningDiploma::class);
+        return $this->hasMany(TrainingDiploma::class);
     }
 
-    public function traningCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function trainingCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(TraningCourse::class);
+        return $this->hasMany(TrainingCourse::class);
     }
 
     public function interview(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -199,5 +197,10 @@ class Instructor extends Model
     public function evaluationStudent(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EvaluationStudent::class);
+    }
+
+    public function availabilities(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Availability::class,'instructor_availabilities','instructor_id','availability_id','id','id');
     }
 }

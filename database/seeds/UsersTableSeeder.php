@@ -18,21 +18,18 @@ class UsersTableSeeder extends Seeder
         ]);
 
         $employee = \App\Models\Employee::create([
-            'first_name'=>'super',
-            'middle_name'=>'admin',
-            'last_name'=>'admin',
-            'phone'=>'123456',
-            'address'=>'giza',
-            'National_ID'=>'123456789123',
+            'name_en'=>'super admin',
+            'name_ar'=>'أدمن',
             'mobile'=>'01122334455',
-            'birth_date'=>'2021-9-19',
+            'email'=>'super_admin@app.com',
             'hiring_date'=>'2021-9-19',
+            'date_of_resignation'=>'2021-9-19',
+            'birth_date'=>'2021-9-19',
             'img'=>'admin00100.png',
             'user_id'=>$user->id,
             'has_account'=>1,
             'active'=>1,
             'admin'=>1,
-
         ]);
 
         $user->attachRole('super_admin');

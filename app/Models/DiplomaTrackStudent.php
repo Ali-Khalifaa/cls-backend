@@ -70,4 +70,9 @@ class DiplomaTrackStudent extends Model
     {
         return $this->hasMany(TraineesAttendanceDiploma::class);
     }
+
+    public function catering(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(DiplomaTrackCatering::class,'diploma_track_student_caterings','diploma_track_student_id','diploma_track_catering_id','id','id');
+    }
 }

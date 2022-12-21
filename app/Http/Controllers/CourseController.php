@@ -39,7 +39,11 @@ class CourseController extends Controller
      */
     public function index()
     {
-        $courses = Course::with(['coursePrices','caterings'])->get();
+        $courses = Course::with(['coursePrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'caterings'])->get()->makeVisible(['catering_ids']);
 
         return response()->json($courses);
 
@@ -60,7 +64,8 @@ class CourseController extends Controller
             'hour_count' => 'required|numeric',
             'course_code' => 'nullable|string|max:100|unique:courses,course_code',
             'configuration_pcs' => 'nullable|string|max:300',
-            'catering'=>'required',
+            'catering'=>'required|array|min:1',
+            'catering.*'=>'exists:caterings,id',
         ]);
 
         if ($validator->fails()) {
@@ -79,9 +84,6 @@ class CourseController extends Controller
 
         $course->caterings()->attach($request->catering);
 
-        $request_data = $request->all();
-        $request_data['course_id'] = $course->id;
-        CoursePrice::create($request_data);
         return response()->json($course);
     }
 
@@ -93,7 +95,11 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = Course::with(['coursePrices','caterings'])->findOrFail($id);
+        $course = Course::with(['coursePrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'caterings'])->findOrFail($id)->makeVisible(['catering_ids']);
         return response()->json($course);
     }
 
@@ -113,7 +119,8 @@ class CourseController extends Controller
             'hour_count' => 'required|numeric',
             'configuration_pcs' => 'nullable|string|max:300',
             'course_code' => 'required|string|max:100|unique:courses,course_code' . ($id ? ",$id" : ''),
-
+            'catering'=>'required|array|min:1',
+            'catering.*'=>'exists:caterings,id',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -129,7 +136,6 @@ class CourseController extends Controller
             'course_code' => $request->course_code,
             'configuration_pcs' => $request->configuration_pcs,
         ]);
-        $course->coursePrices->update($request->all());
 
         return response()->json($course);
     }

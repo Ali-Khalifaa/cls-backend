@@ -12,16 +12,12 @@ class DiplomaTrack extends Model
         'instructor_id',
         'category_id',
         'vendor_id',
-        'instructor_hour_cost',
+        'rate_per_hour',
+        'delivery_type_id',
         'start_date',
         'end_date',
-        'registration_last_date',
-        'trainees_allowed_count',
-        'minimum_students_notification',
-        'total_cost',
         'cancel',
-        'is_waiting',
-        'course_type',
+        'is_initial',
     ];
 
     //appends
@@ -137,6 +133,16 @@ class DiplomaTrack extends Model
     public function evaluationStudent(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EvaluationStudent::class);
+    }
+
+    public function cateringTrack()
+    {
+        return $this->hasMany(DiplomaTrackCatering::class,'diploma_track_id');
+    }
+
+    public function materialTrack()
+    {
+        return $this->hasMany(DiplomaTrackMaterial::class,'diploma_track_id');
     }
 
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DiplomaMaterial;
 use App\Models\DiplomaPrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,7 +15,9 @@ class DiplomaPricesController extends Controller
      */
     public function diplomaPrice($id)
     {
-        $diplomaPrice = DiplomaPrice::findOrFail($id);
+        $diplomaPrice = DiplomaPrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->findOrFail($id);
         return response()->json($diplomaPrice);
     }
 
@@ -24,21 +27,17 @@ class DiplomaPricesController extends Controller
 
     public function diplomaPriceNow($id)
     {
-        $diplomaPrices = DiplomaPrice::where('diploma_id',$id)->get();
+        $diplomaPrices = DiplomaPrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('diploma_id',$id)
+            ->whereDate('from_date','<=',now())
+            ->whereDate('active_date','>=',now())->first();
 
-        $data=[];
-        $date = Carbon::now()->toDateString();
-
-        if(count($diplomaPrices) > 0)
+        if (!$diplomaPrices)
         {
-            foreach ($diplomaPrices as $coursePrice)
-            {
-                if ($coursePrice->active_date >= $date)
-                {
-                    $data[] = $coursePrice;
-                    return response()->json($data);
-                }
-            }
+            $diplomaPrices = DiplomaPrice::with(['materials'=>function($q){
+                $q->with('material');
+            }])->where('diploma_id',$id)->get()->last();
         }
         return response()->json($diplomaPrices);
     }
@@ -52,19 +51,30 @@ class DiplomaPricesController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-
             'diploma_id' => 'required|exists:diplomas,id',
-            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            'active_date' => 'required|date',
-
+            'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'private' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'online' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'protocol' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate_group' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'official' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_cd' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_flash_memory' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'hard_copy' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'lab_virtual' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'membership_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'application_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'exam_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'block_note' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'pen' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'from_date' => 'required',
+            'active_date' => 'required',
+//            'materials' => 'required|array',
+//            'materials.*.material_id' => 'required|exists:materials,id',
+//            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -76,18 +86,15 @@ class DiplomaPricesController extends Controller
         $request_data['active_date'] =$date;
         $request_data['from_date'] =$from_date;
 
-        //check date
-        $diplomas = DiplomaPrice::where('diploma_id',$request->diploma_id)->get();
-        foreach ($diplomas as $diploma)
-        {
-            if ($diploma->active_date == $date)
-            {
-                return response()->json("This date already exists",422);
-            }
-        }
-
         $diplomaPrices = new DiplomaPrice($request_data);
         $diplomaPrices->save();
+//        foreach ($request['materials'] as $material){
+//            DiplomaMaterial::create([
+//                'diploma_price_id' => $diplomaPrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($diplomaPrices);
     }
@@ -100,7 +107,9 @@ class DiplomaPricesController extends Controller
      */
     public function show($id)
     {
-        $diplomaPrices = DiplomaPrice::where('diploma_id',$id)->get();
+        $diplomaPrices = DiplomaPrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('diploma_id',$id)->get();
 
         return response()->json($diplomaPrices);
     }
@@ -116,19 +125,30 @@ class DiplomaPricesController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-
             'diploma_id' => 'required|exists:diplomas,id',
-            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            'active_date' => 'required|date',
-
+            'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'private' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'online' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'protocol' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate_group' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'official' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_cd' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_flash_memory' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'hard_copy' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'lab_virtual' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'membership_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'application_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'exam_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'block_note' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'pen' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'from_date' => 'required',
+            'active_date' => 'required',
+//            'materials' => 'required|array',
+//            'materials.*.material_id' => 'required|exists:materials,id',
+//            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
@@ -141,19 +161,20 @@ class DiplomaPricesController extends Controller
         $request_data=$request->all();
         $request_data['active_date'] =$date;
         $request_data['from_date'] =$from_date;
-
-        //check date
-        $diplomas = DiplomaPrice::where('diploma_id',$request->diploma_id)->get();
-        foreach ($diplomas as $diploma)
-        {
-            if ($diploma->active_date == $date)
-            {
-                return response()->json("This date already exists",422);
-            }
-        }
-
         $diplomaPrices = DiplomaPrice::findOrFail($id);
         $diplomaPrices->update($request_data);
+
+//        foreach ($diplomaPrices->materials as $item){
+//            $item->delete();
+//        }
+//
+//        foreach ($request['materials'] as $material){
+//            DiplomaMaterial::create([
+//                'diploma_price_id' => $diplomaPrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($diplomaPrices);
     }

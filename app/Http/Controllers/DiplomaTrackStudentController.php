@@ -19,7 +19,9 @@ class DiplomaTrackStudentController extends Controller
      */
     public function registerDiplomaTrackByEmployeeIdAndDiplomaTrackId($employee_id,$course_track_id)
     {
-        $course_track_students = DiplomaTrackStudent::with(['lead','diplomaTrack','employee','diplomaTrackStudentPrice','diplomaTrackStudentDiscount','diplomaTrackStudentPayment'])->where([
+        $course_track_students = DiplomaTrackStudent::with(['catering'=>function($q){
+            $q->with('catering');
+        },'lead','diplomaTrack','employee','diplomaTrackStudentPrice','diplomaTrackStudentDiscount','diplomaTrackStudentPayment'])->where([
             ['diploma_track_id',$course_track_id],
             ['employee_id',$employee_id],
             ['cancel',0],
@@ -123,18 +125,19 @@ class DiplomaTrackStudentController extends Controller
         if($request->lead_id == "null")
         {
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:100',
-                'middle_name' => 'required|string|max:100',
-                'last_name' => 'required|string|max:100',
-                'education' => 'required|string|max:100',
-                'registration_remark' => 'string',
-                'mobile' => 'required|regex:/(01)[0-9]{9}/|unique:leads',
-                'phone' => 'required|unique:leads',
-                'email' => 'required|string|email|max:255|unique:leads',
-                'country_id' => 'required|exists:countries,id',
-                'state_id' => 'required|exists:states,id',
+                'name_en' => 'required|string|max:150',
+                'name_ar' => 'nullable|string|max:150',
+                'registration_remark' => 'nullable|string|max:250',
+                'mobile' => 'required|unique:leads,mobile',
+                'phone' => 'nullable|unique:leads,phone',
+                'email' => 'required|string|email|max:255|unique:leads,email',
+                'country_id' => 'nullable|exists:countries,id',
+                'state_id' => 'nullable|exists:states,id',
                 'interesting_level_id' => 'required|exists:interesting_levels,id',
                 'lead_source_id' => 'required|exists:lead_sources,id',
+                'Job_title' => 'nullable|string|max:150',
+                'company_name' => 'nullable|string|max:150',
+                'birth_day' => 'nullable|date'
             ]);
 
             if ($validator->fails()) {
@@ -143,10 +146,8 @@ class DiplomaTrackStudentController extends Controller
             }
 
             $lead = Lead::create([
-                'first_name' => $request->first_name,
-                'middle_name' => $request->middle_name,
-                'last_name' => $request->last_name,
-                'education' => $request->education,
+                'name_en' => $request->name_en,
+                'name_ar' => $request->name_ar,
                 'registration_remark' => $request->registration_remark,
                 'mobile' => $request->mobile,
                 'phone' => $request->phone,
@@ -156,6 +157,9 @@ class DiplomaTrackStudentController extends Controller
                 'interesting_level_id' => $request->interesting_level_id,
                 'lead_source_id' => $request->lead_source_id,
                 'employee_id' => $request->employee_id,
+                'Job_title' => $request->Job_title,
+                'company_name' => $request->company_name,
+                'birth_day' => $request->birth_day,
                 'is_client' => 1
             ]);
 
@@ -176,6 +180,8 @@ class DiplomaTrackStudentController extends Controller
             'employee_id' => $request_data['employee_id'],
             'diploma_id' => $diploma_track->diploma_id,
         ]);
+
+        $course_track_student->catering()->syncWithoutDetaching($request->catering);
 
         $request_data['diploma_track_student_id'] = $course_track_student->id;
 
@@ -270,7 +276,9 @@ class DiplomaTrackStudentController extends Controller
      */
     public function show($id)
     {
-        $course_track_student = DiplomaTrackStudent::with(['lead','diplomaTrack','employee','diplomaTrackStudentPrice','diplomaTrackStudentDiscount','diplomaTrackStudentPayment'])->findOrFail($id);
+        $course_track_student = DiplomaTrackStudent::with(['catering'=>function($q){
+            $q->with('catering');
+        },'lead','diplomaTrack','employee','diplomaTrackStudentPrice','diplomaTrackStudentDiscount','diplomaTrackStudentPayment'])->findOrFail($id);
 
         return response()->json($course_track_student);
     }

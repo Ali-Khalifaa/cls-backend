@@ -8,6 +8,7 @@ class Event extends Model
 {
     protected $fillable = [
         'title',
-        'date',
+        'from_date',
+        'to_date',
     ];
 }

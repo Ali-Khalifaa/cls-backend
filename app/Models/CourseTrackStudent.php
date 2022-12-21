@@ -71,4 +71,13 @@ class CourseTrackStudent extends Model
         return $this->hasMany(TraineesAttendanceCourse::class);
     }
 
+    public function materials(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(CourseTrackMaterial::class,'course_track_student_materials','course_track_student_id','course_track_material_id','id','id');
+    }
+
+    public function catering(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(CourseTrackCatering::class,'course_track_student_caterings','course_track_student_id','course_track_catering_id','id','id');
+    }
 }

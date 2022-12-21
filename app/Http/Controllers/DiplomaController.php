@@ -16,7 +16,11 @@ class DiplomaController extends Controller
      */
     public function index()
     {
-        $diplomas =Diploma::with(['diplomaPrices','caterings','courses'])->get();
+        $diplomas =Diploma::with(['diplomaPrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'caterings','courses'])->get()->makeVisible(['catering_ids']);
 
         return response()->json($diplomas);
     }
@@ -35,8 +39,10 @@ class DiplomaController extends Controller
             'category_id' => 'required|exists:categories,id',
             'vendor_id' => 'required|exists:vendors,id',
             'diploma_code' => 'required|string|max:100|unique:diplomas,diploma_code',
-            'catering'=>'required',
-            'courses'=>'required',
+            'catering'=>'required|array|min:1',
+            'catering.*'=>'exists:caterings,id',
+            'courses'=>'required|array|min:1',
+            'courses.*'=>'required|exists:courses,id',
         ]);
 
         if ($validator->fails()) {
@@ -54,12 +60,6 @@ class DiplomaController extends Controller
             'configuration_pcs' => $request->configuration_pcs,
         ]);
 
-        $request_data = $request->all();
-
-        $request_data['diploma_id']=$diploma->id;
-
-        DiplomaPrice::create($request_data);
-
         $diploma->courses()->syncWithoutDetaching($request->courses);
         $diploma->caterings()->syncWithoutDetaching($request->catering);
 
@@ -74,7 +74,11 @@ class DiplomaController extends Controller
      */
     public function show($id)
     {
-        $diploma = Diploma::with(['courses','vendor','diplomaPrices','courses','traningDiplomas','caterings'])->findOrFail($id);
+        $diploma = Diploma::with(['courses','vendor','diplomaPrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'courses','traningDiplomas','caterings'])->findOrFail($id)->makeVisible(['catering_ids']);
 
         return response()->json($diploma);
     }
@@ -94,8 +98,10 @@ class DiplomaController extends Controller
             'category_id' => 'required|exists:categories,id',
             'vendor_id' => 'required|exists:vendors,id',
             'diploma_code' => 'required|string|max:100|unique:diplomas,diploma_code' . ($id ? ",$id" : ''),
-            'catering'=>'required',
-            'courses'=>'required',
+            'catering'=>'required|array|min:1',
+            'catering.*'=>'exists:caterings,id',
+            'courses'=>'required|array|min:1',
+            'courses.*'=>'required|exists:courses,id',
         ]);
 
         if ($validator->fails()) {

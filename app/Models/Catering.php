@@ -19,4 +19,14 @@ class Catering extends Model
     {
         return $this->belongsToMany(Diploma::class,'diploma_caterings','catering_id','diploma_id','id','id');
     }
+
+    public function courseTrack()
+    {
+        return $this->hasMany(CourseTrackCatering::class,'catering_id');
+    }
+
+    public function diplomaTrack()
+    {
+        return $this->hasMany(DiplomaTrackCatering::class,'catering_id');
+    }
 }

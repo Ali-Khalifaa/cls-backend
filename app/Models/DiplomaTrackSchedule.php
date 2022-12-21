@@ -25,10 +25,10 @@ class DiplomaTrackSchedule extends Model
         'lab_name',
         'course_name',
         'diploma_name',
-        'day_name',
-        'first_name',
-        'middle_name'
-        ,'last_name'
+        'day_name'
+//        ,'first_name'
+//        ,'middle_name'
+//        ,'last_name'
         ,'start_date'
         ,'end_date'
         ,'diploma_hours'
@@ -59,18 +59,18 @@ class DiplomaTrackSchedule extends Model
         return $this->day()->get('day')->pluck('day')->first();
     }
 
-    public function getFirstNameAttribute()
-    {
-        return $this->instructor()->get('first_name')->pluck('first_name')->first();
-    }
-    public function getMiddleNameAttribute()
-    {
-        return $this->instructor()->get('middle_name')->pluck('middle_name')->first();
-    }
-    public function getLastNameAttribute()
-    {
-        return $this->instructor()->get('last_name')->pluck('last_name')->first();
-    }
+//    public function getFirstNameAttribute()
+//    {
+//        return $this->instructor()->get('first_name')->pluck('first_name')->first();
+//    }
+//    public function getMiddleNameAttribute()
+//    {
+//        return $this->instructor()->get('middle_name')->pluck('middle_name')->first();
+//    }
+//    public function getLastNameAttribute()
+//    {
+//        return $this->instructor()->get('last_name')->pluck('last_name')->first();
+//    }
 
     public function getStartDateAttribute()
     {
