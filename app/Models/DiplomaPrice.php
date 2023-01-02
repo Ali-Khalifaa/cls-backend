@@ -22,10 +22,13 @@ class DiplomaPrice extends Model
         'hard_copy',
         'lab_virtual',
         'membership_price',
+        'application_price',
         'exam_price',
         'block_note',
         'pen',
         'training_kit',
+        'from_date',
+        'active_date',
     ];
 
     //relations
@@ -34,7 +37,5 @@ class DiplomaPrice extends Model
     {
         return $this->belongsTo(Diploma::class,'diploma_id');
     }
-
-
 
 }

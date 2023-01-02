@@ -26,6 +26,8 @@ class CoursePrice extends Model
         'block_note',
         'pen',
         'training_kit',
+        'from_date',
+        'active_date',
     ];
 
     //relations

@@ -41,6 +41,8 @@ class CreateCoursePricesTable extends Migration
             $table->double('block_note',20,2)->default(0);
             $table->double('pen',20,2)->default(0);
             $table->double('training_kit',20,2)->default(0);
+            $table->date('from_date')->nullable();
+            $table->date('active_date')->nullable();
 
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
 

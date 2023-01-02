@@ -52,18 +52,27 @@ class DiplomaPricesController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-
             'diploma_id' => 'required|exists:diplomas,id',
-            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            'active_date' => 'required|date',
+            'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'private' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'online' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'protocol' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate_group' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'official' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_cd' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_flash_memory' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'hard_copy' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'lab_virtual' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'membership_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'application_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'exam_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'block_note' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'pen' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'from_date' => 'required',
+            'active_date' => 'required',
 
         ]);
         if ($validator->fails()) {
@@ -118,17 +127,26 @@ class DiplomaPricesController extends Controller
         $validator = Validator::make($request->all(), [
 
             'diploma_id' => 'required|exists:diplomas,id',
-            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            'active_date' => 'required|date',
-
+            'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'private' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'online' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'protocol' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'corporate_group' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'official' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_cd' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'soft_copy_flash_memory' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'hard_copy' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'lab_virtual' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'membership_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'application_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'exam_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'block_note' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'pen' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'from_date' => 'required',
+            'active_date' => 'required',
         ]);
 
         if ($validator->fails()) {

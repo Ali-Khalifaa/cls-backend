@@ -35,8 +35,10 @@ class DiplomaController extends Controller
             'category_id' => 'required|exists:categories,id',
             'vendor_id' => 'required|exists:vendors,id',
             'diploma_code' => 'required|string|max:100|unique:diplomas,diploma_code',
-            'catering'=>'required',
-            'courses'=>'required',
+            'catering'=>'required|array|min:1',
+            'catering.*'=>'exists:caterings,id',
+            'courses'=>'required|array|min:1',
+            'courses.*'=>'required|exists:courses,id',
         ]);
 
         if ($validator->fails()) {
@@ -53,12 +55,6 @@ class DiplomaController extends Controller
             'diploma_code' => $request->diploma_code,
             'configuration_pcs' => $request->configuration_pcs,
         ]);
-
-        $request_data = $request->all();
-
-        $request_data['diploma_id']=$diploma->id;
-
-        DiplomaPrice::create($request_data);
 
         $diploma->courses()->syncWithoutDetaching($request->courses);
         $diploma->caterings()->syncWithoutDetaching($request->catering);
@@ -94,8 +90,10 @@ class DiplomaController extends Controller
             'category_id' => 'required|exists:categories,id',
             'vendor_id' => 'required|exists:vendors,id',
             'diploma_code' => 'required|string|max:100|unique:diplomas,diploma_code' . ($id ? ",$id" : ''),
-            'catering'=>'required',
-            'courses'=>'required',
+            'catering'=>'required|array|min:1',
+            'catering.*'=>'exists:caterings,id',
+            'courses'=>'required|array|min:1',
+            'courses.*'=>'required|exists:courses,id',
         ]);
 
         if ($validator->fails()) {

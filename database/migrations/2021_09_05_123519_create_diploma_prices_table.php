@@ -36,10 +36,13 @@ class CreateDiplomaPricesTable extends Migration
 
             $table->double('lab_virtual',20,2)->default(0);
             $table->double('membership_price',20,2)->default(0);
+            $table->double('application_price',20,2)->default(0);
             $table->double('exam_price',20,2)->default(0);
             $table->double('block_note',20,2)->default(0);
             $table->double('pen',20,2)->default(0);
             $table->double('training_kit',20,2)->default(0);
+            $table->date('from_date')->nullable();
+            $table->date('active_date')->nullable();
 
             $table->foreign('diploma_id')->references('id')->on('diplomas')->onDelete('cascade');
 
