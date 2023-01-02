@@ -13,6 +13,7 @@ use App\Models\InstructorPayment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -56,16 +57,10 @@ class InstructorController extends Controller
      */
     public function index()
     {
-        $instructors = Instructor::all();
+        $instructors = Instructor::with(['user','bankAccount','trainingDiplomas','trainingCourses','availabilities'])->get();
         foreach ($instructors as $instructor) {
-            $instructor->user;
-            $instructor->bankAccount;
-            $instructor->traningCategories;
-            $instructor->traningDiplomas;
-            $instructor->traningCourses;
-
             $instructor->noAction = 0;
-            if (count($instructor->traningCategories) > 0 || count($instructor->traningDiplomas) > 0 || count($instructor->traningCourses) > 0 || count($instructor->interview) > 0 || $instructor->courseTrack > 0 || count($instructor->courseTrackSchedule) > 0 || $instructor->diplomaTrack > 0 || count($instructor->diplomaTrackSchedule) > 0 ) {
+            if (count($instructor->trainingDiplomas) > 0 || count($instructor->trainingCourses) > 0){
                 $instructor->noAction = 1;
             }
         }
@@ -81,22 +76,15 @@ class InstructorController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'mobile' => 'required|regex:/(01)[0-9]{9}/|unique:instructors',
-            'address' => 'required|string|max:100',
-            'phone' => 'required|unique:instructors',
-            'cv' => 'required|mimes:pdf|max:10000',
-            'image' => 'mimes:jpeg,jpg,png,gif|required|max:10000', // max 10000kb
-            'hour_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'birth_date' => 'required|date',
+            'name' => 'required|string|max:100',
+            'mobile' => 'required|unique:instructors,mobile',
+            'phone' => 'nullable|unique:instructors,phone',
+            'email' => 'nullable|string|email|max:255|unique:instructors,email',
+            'email_two' => 'nullable|string|email|max:255|unique:instructors,email',
+            'pdf' => 'nullable|mimes:pdf|max:10000',
+            'image' => 'nullable|mimes:jpeg,jpg,png,gif|required|max:10000', // max 10000kb
+            'cls_rate' => 'required|string',
             'has_account' => 'required',
-
-//            'bank_id' => 'required|exists:banks,id',
-//            'IBAN' => 'required|string|max:100',
-//            'account_number' => 'required|string|max:100',
-//            'branch_name' => 'required|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -143,28 +131,30 @@ class InstructorController extends Controller
             $ext = $img->getClientOriginalExtension();
             $image_name = "instructor-image-" . uniqid() . ".$ext";
             $img->move(public_path('uploads/instructor/image/'), $image_name);
+        }else{
+            $image_name = null;
         }
 
-        // c.v upload
+        // pdf upload
 
-        if ($request->hasFile('cv')) {
-            $img = $request->file('cv');
+        if ($request->hasFile('pdf')) {
+            $img = $request->file('pdf');
             $ext = $img->getClientOriginalExtension();
-            $cv_name = "instructor-cv-" . uniqid() . ".$ext";
-            $img->move(public_path('uploads/instructor/cv/'), $cv_name);
+            $pdf_name = "instructor-pdf-" . uniqid() . ".$ext";
+            $img->move(public_path('uploads/instructor/pdf/'), $pdf_name);
+        }else{
+            $pdf_name = null;
         }
 
         $instructor = Instructor::create([
-            'first_name' => $request->first_name,
-            'middle_name' => $request->middle_name,
-            'last_name' => $request->last_name,
+            'name' => $request->name,
             'mobile' => $request->mobile,
-            'address' => $request->address,
             'phone' => $request->phone,
-            'cv' => $cv_name,
+            'email' => $request->email,
+            'email_two' => $request->email_two,
+            'cls_rate' => $request->cls_rate,
+            'cv' => $pdf_name,
             'img' => $image_name,
-            'hour_price' => $request->hour_price,
-            'birth_date' => $request->birth_date,
             'has_account' => $has_account,
             'user_id' => $user_id
         ]);
@@ -179,6 +169,8 @@ class InstructorController extends Controller
                 'branch_name' => $request->branch_name,
             ]);
         }
+
+        $instructor->availabilities()->syncWithoutDetaching($request->availabilities);
 
         return response()->json('created success');
     }
@@ -206,19 +198,15 @@ class InstructorController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-
-            'address' => 'required|string|max:100',
-
-            'hour_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'birth_date' => 'required|date',
-
-//            'bank_id' => 'required|exists:banks,id',
-//            'IBAN' => 'required|string|max:100',
-//            'account_number' => 'required|string|max:100',
-//            'branch_name' => 'required|string|max:100',
+            'name' => 'required|string|max:100',
+            'mobile' => 'required|unique:instructors,mobile,'.$id,
+            'phone' => 'nullable|unique:instructors,phone,'.$id,
+            'email' => 'nullable|string|email|max:255|unique:instructors,email,'.$id,
+            'email_two' => 'nullable|string|email|max:255|unique:instructors,email,'.$id,
+            'pdf' => 'nullable|mimes:pdf|max:10000',
+            'image' => 'nullable|mimes:jpeg,jpg,png,gif|required|max:10000', // max 10000kb
+            'cls_rate' => 'required|string',
+            'has_account' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -228,32 +216,9 @@ class InstructorController extends Controller
 
         $instructor = Instructor::findOrFail($id);
         $img_name = $instructor->img;
-        $cv_name = $instructor->cv;
-
-        if ($instructor->phone != $request->phone) {
-            $validator = Validator::make($request->all(), [
-                'phone' => 'required|unique:instructors',
-            ]);
-
-            if ($validator->fails()) {
-                $errors = $validator->errors();
-                return response()->json($errors, 422);
-            }
-        }
-
-        if ($instructor->mobile != $request->mobile) {
-            $validator = Validator::make($request->all(), [
-                'mobile' => 'required|regex:/(01)[0-9]{9}/|unique:instructors',
-            ]);
-
-            if ($validator->fails()) {
-                $errors = $validator->errors();
-                return response()->json($errors, 422);
-            }
-        }
+        $pdf_name = $instructor->pdf;
 
         $request_data = $request->except(['has_account']);
-//        $request_data['phone'] = "0" . $request->phone;
 
         // image upload
         if ($request->image != "null" || $request->image != null) {
@@ -267,7 +232,7 @@ class InstructorController extends Controller
                     return response()->json($errors, 422);
                 }
 
-                if ($img_name != null && $img_name != 'admin00100.png') {
+                if (File::exists('uploads/instructor/image/' . $img_name) && $img_name != 'admin00100.png') {
                     unlink(public_path('uploads/instructor/image/') . $img_name);
                 }
 
@@ -282,11 +247,11 @@ class InstructorController extends Controller
         }
 
         // c.v upload
-        if ($request->cv != "null" || $request->cv != null) {
-            if ($request->hasFile('cv')) {
+        if ($request->pdf != "null" || $request->pdf != null) {
+            if ($request->hasFile('pdf')) {
 
                 $validator = Validator::make($request->all(), [
-                    'cv' => 'required|mimes:pdf|max:10000',
+                    'pdf' => 'required|mimes:pdf|max:10000',
                 ]);
 
                 if ($validator->fails()) {
@@ -294,18 +259,18 @@ class InstructorController extends Controller
                     return response()->json($errors, 422);
                 }
 
-                if ($cv_name !== null) {
-                    unlink(public_path('uploads/instructor/cv/') . $cv_name);
+                if (File::exists('uploads/instructor/pdf/' . $pdf_name)) {
+                    unlink(public_path('uploads/instructor/pdf/') . $pdf_name);
                 }
 
-                $img = $request->file('cv');
+                $img = $request->file('pdf');
                 $ext = $img->getClientOriginalExtension();
-                $cv_name = "instructor-cv-" . uniqid() . ".$ext";
-                $img->move(public_path('uploads/instructor/cv/'), $cv_name);
-                $request_data['cv'] = $cv_name;
+                $pdf_name = "instructor-pdf-" . uniqid() . ".$ext";
+                $img->move(public_path('uploads/instructor/pdf/'), $pdf_name);
+                $request_data['pdf'] = $pdf_name;
             }
         } else {
-            $request_data['cv'] = $cv_name;
+            $request_data['pdf'] = $pdf_name;
         }
 
         $instructor->update($request_data);
@@ -338,6 +303,8 @@ class InstructorController extends Controller
             }
         }
 
+        $instructor->availabilities()->sync($request->availabilities);
+
         return response()->json('updated success');
 
     }
@@ -352,7 +319,7 @@ class InstructorController extends Controller
     {
         $instructor = Instructor::findOrFail($id);
 
-        if (count($instructor->traningCategories) > 0 || count($instructor->traningDiplomas) > 0 || count($instructor->traningCourses) > 0 || count($instructor->interview) > 0 || $instructor->courseTrack > 0 || count($instructor->courseTrackSchedule) > 0 || $instructor->diplomaTrack > 0 || count($instructor->diplomaTrackSchedule) > 0 ) {
+        if ( count($instructor->trainingDiplomas) > 0 || count($instructor->trainingCourses) > 0 || count($instructor->interview) > 0 || $instructor->courseTrack > 0 || count($instructor->courseTrackSchedule) > 0 || $instructor->diplomaTrack > 0 || count($instructor->diplomaTrackSchedule) > 0 ) {
             return response()->json(0,422);
         }
         $instructor->delete();

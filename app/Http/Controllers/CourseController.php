@@ -39,7 +39,11 @@ class CourseController extends Controller
      */
     public function index()
     {
-        $courses = Course::with(['coursePrices','caterings'])->get();
+        $courses = Course::with(['coursePrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'caterings'])->get()->makeVisible(['catering_ids']);
 
         return response()->json($courses);
 
@@ -91,7 +95,11 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = Course::with(['coursePrices','caterings'])->findOrFail($id);
+        $course = Course::with(['coursePrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'caterings'])->findOrFail($id)->makeVisible(['catering_ids']);
         return response()->json($course);
     }
 

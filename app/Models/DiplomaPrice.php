@@ -38,4 +38,8 @@ class DiplomaPrice extends Model
         return $this->belongsTo(Diploma::class,'diploma_id');
     }
 
+    public function materials()
+    {
+        return $this->hasMany(DiplomaMaterial::class);
+    }
 }

@@ -15,7 +15,7 @@ class CreateSalesTeamPaymentsTable extends Migration
     {
         Schema::create('sales_team_payments', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('target_employee_id')->unsigned()->nullable();
+//            $table->bigInteger('target_employee_id')->unsigned()->nullable();
             $table->bigInteger('employee_id')->unsigned();
             $table->bigInteger('treasury_id')->unsigned()->nullable();
 
@@ -29,7 +29,7 @@ class CreateSalesTeamPaymentsTable extends Migration
             $table->boolean('is_payed')->default(0);
             $table->double('amount')->default(0);
 
-            $table->foreign('target_employee_id')->references('id')->on('target_employees')->onDelete('cascade');
+//            $table->foreign('target_employee_id')->references('id')->on('target_employees')->onDelete('cascade');
             $table->foreign('lead_id')->references('id')->on('leads')->onDelete('cascade');
             $table->foreign('course_track_id')->references('id')->on('course_tracks')->onDelete('cascade');
             $table->foreign('diploma_track_id')->references('id')->on('diploma_tracks')->onDelete('cascade');

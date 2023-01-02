@@ -15,16 +15,14 @@ class CreateLeadActivitiesTable extends Migration
     {
         Schema::create('lead_activities', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('follow_up');
-            $table->text('notes')->nullable();
-            $table->bigInteger('leads_followup_id')->unsigned();
-            $table->bigInteger('reason_id')->unsigned()->nullable();
+            $table->bigInteger('subject_id')->unsigned()->nullable();
+            $table->date('due_date');
+            $table->text('description')->nullable();
             $table->bigInteger('lead_id')->unsigned();
             $table->bigInteger('employee_id')->unsigned();
+            $table->dateTime('close_date')->nullable();
 
-
-            $table->foreign('leads_followup_id')->references('id')->on('leads_followups')->onDelete('cascade');
-            $table->foreign('reason_id')->references('id')->on('reasons')->onDelete('cascade');
+            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
             $table->foreign('lead_id')->references('id')->on('leads')->onDelete('cascade');
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
             $table->timestamps();

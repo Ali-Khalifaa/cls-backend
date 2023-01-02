@@ -16,14 +16,20 @@ class DatabaseSeeder extends Seeder
 //        $this->call(RolesTableSeeder::class);
         $this->call(UsersTableSeeder::class);
         $this->call(FollowupSeeder::class);
-        $this->call(ReasonsSeeder::class);
         $this->call(CompanyFollowupSeeder::class);
-        $this->call(CompanyReasonSeeder::class);
         $this->call(QuestionTypeSeeder::class);
         $this->call(DaysTableSeeder::class);
         $this->call(MonthTableSeeder::class);
         $this->call(LeadSourceSeeder::class);
         $this->call(CateringSeeder::class);
+        $this->call(MilitaryTableSeeder::class);
+        $this->call(CommissionTypeTableSeeder::class);
+        $this->call(PerTableSeeder::class);
+        $this->call(CurrencyTableSeeder::class);
+        $this->call(AvailabilityTableSeeder::class);
+        $this->call(InstructorPerTableSeeder::class);
+        $this->call(SubjectTableSeeder::class);
+        $this->call(MaterialTableSeeder::class);
 
     }//end of run
 }//end of seeder

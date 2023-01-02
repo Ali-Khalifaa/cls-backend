@@ -16,7 +16,7 @@ class CreateSalesTreasuriesTable extends Migration
         Schema::create('sales_treasuries', function (Blueprint $table) {
 
             $table->id();
-            $table->bigInteger('target_employee_id')->unsigned()->nullable();
+//            $table->bigInteger('target_employee_id')->unsigned()->nullable();
             $table->bigInteger('employee_id')->unsigned();
             $table->bigInteger('sales_man_id')->unsigned();
             $table->bigInteger('treasury_id')->unsigned()->nullable();
@@ -26,7 +26,7 @@ class CreateSalesTreasuriesTable extends Migration
             $table->foreign('treasury_id')->references('id')->on('treasuries')->onDelete('cascade');
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
             $table->foreign('sales_man_id')->references('id')->on('employees')->onDelete('cascade');
-            $table->foreign('target_employee_id')->references('id')->on('target_employees')->onDelete('cascade');
+//            $table->foreign('target_employee_id')->references('id')->on('target_employees')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Lab extends Model
 {
     protected $fillable = [
-        'name','lab_capacity','hour_cost','computer_required','pc_count','laptop_count','active'
+        'name','branch_id','seats_capacity','pcs_capacity','active','area_dimensions'
     ];
 
     //relations
@@ -35,5 +35,15 @@ class Lab extends Model
     public function evaluationStudent(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EvaluationStudent::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class,'branch_id');
+    }
+
+    public function assets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Asset::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseMaterial;
 use App\Models\CoursePrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -15,7 +16,9 @@ class CoursePricesController extends Controller
      */
     public function coursePrice($id)
     {
-        $coursePrices = CoursePrice::findOrFail($id);
+        $coursePrices = CoursePrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->findOrFail($id);
         return response()->json($coursePrices);
     }
 
@@ -24,21 +27,19 @@ class CoursePricesController extends Controller
      */
     public function coursePriceNow($id)
     {
-        $coursePrices = CoursePrice::where('course_id',$id)->get();
+        $coursePrices = CoursePrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('course_id',$id)
+            ->whereDate('from_date','<=',now())
+            ->whereDate('active_date','>=',now())->get();
 
-        $data=[];
-        $date = Carbon::now()->toDateString();
-
-        if(count($coursePrices) > 0)
+        if (count($coursePrices) == 0)
         {
-            foreach ($coursePrices as $coursePrice)
-            {
-                if ($coursePrice->active_date >= $date)
-                {
-                    $data[] = $coursePrice;
-                    return response()->json($data);
-                }
-            }
+            $coursePrices = [];
+            $Prices = CoursePrice::with(['materials'=>function($q){
+                $q->with('material');
+            }])->where('course_id',$id)->get()->last();
+            $coursePrices[]=$Prices;
         }
 
         return response()->json($coursePrices);
@@ -88,6 +89,13 @@ class CoursePricesController extends Controller
 
         $coursePrices = new CoursePrice($request_data);
         $coursePrices->save();
+//        foreach ($request['materials'] as $material){
+//            CourseMaterial::create([
+//                'course_price_id' => $coursePrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($coursePrices);
     }
@@ -100,7 +108,9 @@ class CoursePricesController extends Controller
      */
     public function show($id)
     {
-        $coursePrices = CoursePrice::where('course_id',$id)->get();
+        $coursePrices = CoursePrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('course_id',$id)->get();
 
         return response()->json($coursePrices);
 
@@ -115,7 +125,6 @@ class CoursePricesController extends Controller
      */
     public function update(Request $request, $id)
     {
-
         $validator = Validator::make($request->all(), [
             'course_id' => 'required|exists:courses,id',
             'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
@@ -138,6 +147,9 @@ class CoursePricesController extends Controller
             'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
             'from_date' => 'required',
             'active_date' => 'required',
+            'materials' => 'required|array',
+            'materials.*.material_id' => 'required|exists:materials,id',
+            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
@@ -152,6 +164,17 @@ class CoursePricesController extends Controller
 
         $coursePrices = CoursePrice::findOrFail($id);
         $coursePrices->update($request_data);
+//        foreach ($coursePrices->materials as $item){
+//            $item->delete();
+//        }
+//
+//        foreach ($request['materials'] as $material){
+//            CourseMaterial::create([
+//                'course_price_id' => $coursePrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($coursePrices);
     }

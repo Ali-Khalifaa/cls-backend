@@ -15,12 +15,12 @@ class LeadsFollowupController extends Controller
      */
     public function index()
     {
-        $leadsFollowups =LeadsFollowup::with('reasons')->get();
+        $leadsFollowups =LeadsFollowup::all();
 
         foreach($leadsFollowups as $leadsFollowup)
         {
             $leadsFollowup->noAction = 0;
-            if(count($leadsFollowup->reasons) > 0 || count($leadsFollowup->leads) > 0 || count($leadsFollowup->leadActivities) > 0) 
+            if(count($leadsFollowup->leads) > 0 || count($leadsFollowup->leadActivities) > 0)
             {
                 $leadsFollowup->noAction = 1;
             }
@@ -143,8 +143,5 @@ class LeadsFollowupController extends Controller
         $leadsFollowup =LeadsFollowup::where('active',0)->get();
         return response()->json($leadsFollowup);
     }
-
-
-
 
 }

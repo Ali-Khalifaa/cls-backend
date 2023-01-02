@@ -6,6 +6,7 @@ use App\Models\BankAccount;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,26 +19,19 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = Employee::where('admin','=',0)->get();
+        $employees = Employee::where('admin','=',0)->with(['bankAccount','user','department','job','branch','commissions'])->get();
         foreach ($employees as $employee)
         {
-            $employee->user;
             if ($employee->has_account != null)
             {
                 $employee->role_id = $employee->user->roles[0]->id;
             }else{
                 $employee->role_id = null;
             }
-
-            $employee->bankAccount;
-            $employee->department;
-            $employee->job;
-
             $employee->noAction = 0;
-            if(count($employee->targetEmployees) > 0 || count($employee->leadActivities) > 0 || count($employee->leads) > 0 || count($employee->companies) > 0 || count($employee->dealIndividualPlacementTest) > 0 || count($employee->dealInterview) > 0 || count($employee->companyActivities) > 0 || count($employee->courseTrackStudent) > 0 || count($employee->courseTrackStudentComment) > 0 || count($employee->diplomaTrackStudent) > 0  || count($employee->diplomaTrackStudentComment) > 0 || count($employee->diplomaTrackStudentPayment) > 0 || count($employee->courseTrackStudentPayment) > 0) {
-
-                $employee->noAction = 1;
-            }
+//            if (count($instructor->traningCategories) > 0 || count($instructor->traningDiplomas) > 0 || count($instructor->traningCourses) > 0 || count($instructor->interview) > 0 || $instructor->courseTrack > 0 || count($instructor->courseTrackSchedule) > 0 || $instructor->diplomaTrack > 0 || count($instructor->diplomaTrackSchedule) > 0 ) {
+//                $instructor->noAction = 1;
+//            }
         }
         return response()->json($employees);
     }
@@ -51,28 +45,26 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'phone' => 'required|unique:employees,phone',
-            'address' => 'required|string|max:100',
-            'department_id' => 'required|exists:departments,id',
-            'salary' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'National_ID' => 'required',
+            'name_en' => 'required|string|max:100',
+            'name_ar' => 'required|string|max:100',
             'mobile' => 'required|unique:employees,mobile',
+            'mobile_two' => 'nullable|unique:employees,mobile_two',
+            'email_two' => 'required|string|email|max:255|unique:employees,email_two',
+            'department_id' => 'required|exists:departments,id',
+            'job_id' => 'required|exists:jobs,id',
+            'pdf' => 'nullable|mimes:pdf|max:10000',
             'birth_date' => 'required|date',
             'hiring_date' => 'required|date',
-            'job_id' => 'required|exists:jobs,id',
-            'image' => 'mimes:jpeg,jpg,png,gif|required|max:10000', // max 10000kb
-
+            'date_of_resignation' => 'nullable|date',
+            'image' => 'nullable|mimes:jpeg,jpg,png,gif|required|max:10000',
             'has_account' => 'required',
-            'graduation_year' => 'required',
-            'eduction' => 'required',
-
-//            'bank_id' => 'required|exists:banks,id',
-//            'IBAN' => 'required|string|max:100',
-//            'account_number' => 'required|string|max:100',
-//            'branch_name' => 'required|string|max:100',
+            'insurance_number' => 'nullable|numeric',
+            'ID_number' => 'nullable|numeric',
+            'military_id' => 'required|exists:militaries,id',
+            'relation_status' => 'required|in:married,single',
+            'name_of_company_insurance' => 'nullable|string|max:100',
+            'salary' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'branch_id' => 'required|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +82,6 @@ class EmployeeController extends Controller
         {
             $has_account = 0 ;
         }
-
 
         //crete account
         if ($has_account ==1){
@@ -127,29 +118,39 @@ class EmployeeController extends Controller
             $img->move( public_path('uploads/employee/') , $image_name);
         }
 
+        if ($request->hasFile('pdf')){
+            $img = $request->file('pdf');
+            $ext = $img->getClientOriginalExtension();
+            $pdf_name = "employee-pdf-" . uniqid() . ".$ext";
+            $img->move(public_path('uploads/employee/'), $pdf_name);
+        }
 
         $employee = Employee::create([
-            'first_name' => $request->first_name,
-            'middle_name' => $request->middle_name,
-            'last_name' => $request->last_name,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'department_id' => $request->department_id,
-            'salary' => $request->salary,
-            'National_ID' => $request->National_ID,
+            'name_en' => $request->name_en,
+            'name_ar' => $request->name_ar,
             'mobile' => $request->mobile,
-            'birth_date' => $request->birth_date,
-            'hiring_date' => $request->hiring_date,
+            'mobile_two' => $request->mobile_two,
+            'email' => $request->email,
+            'email_two' => $request->email_two,
             'job_id' => $request->job_id,
-            'graduation_year' => $request->graduation_year,
-            'eduction' => $request->eduction,
+            'department_id' => $request->department_id,
+            'pdf' => $pdf_name,
+            'hiring_date' => $request->hiring_date,
+            'date_of_resignation' => $request->date_of_resignation,
+            'insurance_number' => $request->insurance_number,
+            'ID_number' => $request->ID_number,
+            'birth_date' => $request->birth_date,
+            'military_id' => $request->military_id,
+            'relation_status' => $request->relation_status,
+            'name_of_company_insurance' => $request->name_of_company_insurance,
+            'salary' => $request->salary,
             'img' => $image_name,
+            'user_id' => $user_id,
+            'branch_id' => $request->branch_id,
             'has_account' => $has_account,
-            'user_id' => $user_id
         ]);
 
         if ($request->bank_id != "undefined" && $request->IBAN != "undefined" && $request->account_number != "undefined") {
-
             BankAccount::create([
                 'bank_id' => $request->bank_id,
                 'employee_id' => $employee->id,
@@ -157,8 +158,9 @@ class EmployeeController extends Controller
                 'account_number' => $request->account_number,
                 'branch_name' => $request->branch_name,
             ]);
-
         }
+
+        $employee->commissions()->syncWithoutDetaching($request->commissions);
 
         return response()->json('created success');
     }
@@ -171,7 +173,7 @@ class EmployeeController extends Controller
      */
     public function show($id)
     {
-        $employee = Employee::with('user')->findOrFail($id);
+        $employee = Employee::with(['bankAccount','user','department','job','branch','commissions'])->findOrFail($id);
         return response()->json($employee);
     }
 
@@ -185,28 +187,26 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-
-            'address' => 'required|string|max:100',
+            'name_en' => 'required|string|max:100',
+            'name_ar' => 'required|string|max:100',
+            'mobile' => 'required|unique:employees,mobile'. ($id ? ",$id" : ''),
+            'mobile_two' => 'nullable|unique:employees,mobile_two'. ($id ? ",$id" : ''),
+            'email_two' => 'required|string|email|max:255|unique:employees,email_two'. ($id ? ",$id" : ''),
             'department_id' => 'required|exists:departments,id',
-            'salary' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'National_ID' => 'required',
-
+            'job_id' => 'required|exists:jobs,id',
+            'pdf' => 'nullable|mimes:pdf|max:10000',
             'birth_date' => 'required|date',
             'hiring_date' => 'required|date',
-            'job_id' => 'required|exists:jobs,id',
-
-            'graduation_year' => 'required',
-            'eduction' => 'required',
-            'phone' => 'required|unique:employees,phone' . ($id ? ",$id" : ''),
-            'mobile' => 'required|regex:/(01)[0-9]{9}/|unique:employees,mobile' . ($id ? ",$id" : ''),
-
-//            'bank_id' => 'required|exists:banks,id',
-//            'IBAN' => 'required|string|max:100',
-//            'account_number' => 'required|string|max:100',
-//            'branch_name' => 'required|string|max:100',
+            'date_of_resignation' => 'nullable|date',
+            'image' => 'nullable|mimes:jpeg,jpg,png,gif|required|max:10000',
+            'has_account' => 'required',
+            'insurance_number' => 'nullable|numeric',
+            'ID_number' => 'nullable|numeric',
+            'military_id' => 'required|exists:militaries,id',
+            'relation_status' => 'required|in:married,single',
+            'name_of_company_insurance' => 'nullable|string|max:100',
+            'salary' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'branch_id' => 'required|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -216,23 +216,14 @@ class EmployeeController extends Controller
 
         $employee =Employee::findOrFail($id);
         $img_name = $employee->img;
+        $pdf_name = $employee->pdf;
 
         $request_data = $request->all();
 
         // image upload
         if ($request->image != "null" || $request->image != null) {
             if ($request->hasFile('image')) {
-
-                $validator = Validator::make($request->all(), [
-                    'image' => 'mimes:jpeg,jpg,png,gif|required|max:10000', // max 10000kb
-                ]);
-
-                if ($validator->fails()) {
-                    $errors = $validator->errors();
-                    return response()->json($errors,422);
-                }
-
-                if ($img_name != null && $img_name != 'admin00100.png') {
+                if (File::exists('uploads/employee/' . $img_name)  && $img_name != 'admin00100.png') {
                     unlink(public_path('uploads/employee/') . $img_name);
                 }
 
@@ -244,6 +235,21 @@ class EmployeeController extends Controller
             }
         }else{
             $request_data['img'] = $img_name;
+        }
+
+        if ($request->image != "null" || $request->image != null) {
+            if ($request->hasFile('pdf')) {
+                if (File::exists('uploads/employee/' . $pdf_name)  && $pdf_name != null) {
+                    unlink(public_path('uploads/employee/') . $pdf_name);
+                }
+
+                $img = $request->file('pdf');
+                $ext = $img->getClientOriginalExtension();
+                $pdf_name = "employee-pdf-" . uniqid() . ".$ext";
+                $img->move(public_path('uploads/employee/'), $pdf_name);
+            }
+        }else{
+            $request_data['pdf'] = $pdf_name;
         }
 
         $employee->update($request_data);
@@ -276,6 +282,7 @@ class EmployeeController extends Controller
             }
         }
 
+        $employee->commissions()->sync($request->commissions);
 
         return response()->json('updated success');
 
@@ -291,11 +298,7 @@ class EmployeeController extends Controller
     public function destroy($id)
     {
         $employee =Employee::findOrFail($id);
-        if(count($employee->targetEmployees) > 0 || count($employee->leadActivities) > 0 || count($employee->leads) > 0 || count($employee->companies) > 0 || count($employee->dealIndividualPlacementTest) > 0 || count($employee->dealInterview) > 0 || count($employee->companyActivities) > 0 || count($employee->courseTrackStudent) > 0 || count($employee->courseTrackStudentComment) > 0 || count($employee->diplomaTrackStudent) > 0  || count($employee->diplomaTrackStudentComment) > 0 || count($employee->diplomaTrackStudentPayment) > 0 || count($employee->courseTrackStudentPayment) > 0) {
-            return response()->json(0,422);
-        }
         $employee->delete();
-
         return response()->json("deleted successfully");
 
     }

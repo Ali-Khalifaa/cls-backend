@@ -29,7 +29,8 @@ class EventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:100',
-            'date' => 'required|date',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
         ]);
 
         if ($validator->fails()) {
@@ -64,7 +65,8 @@ class EventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:100',
-            'date' => 'required|date',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
         ]);
 
         if ($validator->fails()) {

@@ -12,22 +12,6 @@ use Illuminate\Support\Facades\Validator;
 class CompanyActivityController extends Controller
 {
     /**
-     * get company by followup id and employee id
-     */
-    public function getCompanyFollowUpEmployee($followup_id,$employee_id)
-    {
-        $leads = Company::with(['companyContacts','companyActivities','employee','companyFollowup'])
-            ->where([
-                ['employee_id',$employee_id],
-                ['company_followup_id',$followup_id],
-                ['is_client','=',0],
-                ['add_placement','=',0],
-            ])->get();
-
-        return response()->json($leads);
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -36,8 +20,9 @@ class CompanyActivityController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'follow_up' => 'required',
-            'company_followup_id' => 'required|exists:company_followups,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'due_date' => 'required|date|after:yesterday',
+            'description' => 'required|string',
             'company_id' => 'required|exists:companies,id',
             'employee_id' => 'required|exists:employees,id',
         ]);
@@ -46,24 +31,10 @@ class CompanyActivityController extends Controller
             $errors = $validator->errors();
             return response()->json($errors,422);
         }
-
-        // file upload
-        $request_data = $request->all();
-        if($request->hasFile('file'))
-        {
-            $img = $request->file('file');
-            $ext = $img->getClientOriginalExtension();
-            $name = "company-file-". uniqid() . ".$ext";
-            $img->move( public_path('uploads/company/') , $name);
-            $request_data['file'] = $name;
-            $companyActivity = CompanyActivity::create($request_data);
-        }else{
-            $companyActivity = CompanyActivity::create($request_data);
-        }
-
+        $companyActivity = CompanyActivity::create($request->all());
         $lead = Company::findOrFail($request->company_id);
         $lead->update([
-            'company_followup_id' => $request->company_followup_id,
+            'add_list' => 1
         ]);
 
         return response()->json($companyActivity);
@@ -77,9 +48,52 @@ class CompanyActivityController extends Controller
      */
     public function show($id)
     {
-        $companyActivity = CompanyActivity::with(['company','companyFollowup','companyFollowupReason','employees'])->where('company_id','=',$id)->get();
+        $companyActivity = CompanyActivity::with(['company','subject','employees'])->where('company_id','=',$id)->get();
 
         return response()->json($companyActivity);
+    }
+
+    // close task
+
+    public function closeTaskCompany(Request $request){
+        $validator = Validator::make($request->all(), [
+            'company_activity_id' => 'required|exists:company_activities,id',
+            'close_open' => 'required|integer'
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            return response()->json($errors,422);
+        }
+
+        if ($request->close_open == 1){
+            $validator = Validator::make($request->all(), [
+                'subject_id' => 'required|exists:subjects,id',
+                'due_date' => 'required|date|after:yesterday',
+                'description' => 'required|string',
+                'company_id' => 'required|exists:companies,id',
+                'employee_id' => 'required|exists:employees,id',
+            ]);
+
+            if ($validator->fails()) {
+                $errors = $validator->errors();
+                return response()->json($errors,422);
+            }
+
+            CompanyActivity::create($request->all());
+        }
+
+        $companyActivity = CompanyActivity::find($request->lead_activity_id);
+
+        $companyActivity->update([
+            'close_date' => now()
+        ]);
+
+        $companyActivity->company()->update([
+            'add_list' => $request->close_open
+        ]);
+
+        return response()->json('successfully');
     }
 
     /**

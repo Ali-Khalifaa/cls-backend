@@ -9,6 +9,7 @@ use App\Models\CourseTrackStudentDiscount;
 use App\Models\CourseTrackStudentPayment;
 use App\Models\CourseTrackStudentPrice;
 use App\Models\Lead;
+use App\Models\LeadFile;
 use App\Models\TargetEmployees;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -20,7 +21,11 @@ class CourseTrackStudentController extends Controller
      */
     public function registerCourseTrackByEmployeeIdAndCourseTrackId($employee_id,$course_track_id)
     {
-        $course_track_students = CourseTrackStudent::with(['lead','courseTrack','employee','courseTrackStudentPrice','courseTrackStudentDiscount','courseTrackStudentPayment'])->where([
+        $course_track_students = CourseTrackStudent::with(['materials'=>function($q){
+            $q->with('material');
+        },'catering'=>function($q){
+            $q->with('catering');
+        },'lead','courseTrack','employee','courseTrackStudentPrice','courseTrackStudentDiscount','courseTrackStudentPayment'])->where([
             ['course_track_id',$course_track_id],
             ['employee_id',$employee_id],
             ['cancel',0],
@@ -124,18 +129,19 @@ class CourseTrackStudentController extends Controller
         if($request->lead_id == "null")
         {
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:100',
-                'middle_name' => 'required|string|max:100',
-                'last_name' => 'required|string|max:100',
-                'education' => 'required|string|max:100',
-                'registration_remark' => 'string',
-                'mobile' => 'required|regex:/(01)[0-9]{9}/|unique:leads',
-                'phone' => 'required|unique:leads',
-                'email' => 'required|string|email|max:255|unique:leads',
-                'country_id' => 'required|exists:countries,id',
-                'state_id' => 'required|exists:states,id',
+                'name_en' => 'required|string|max:150',
+                'name_ar' => 'nullable|string|max:150',
+                'registration_remark' => 'nullable|string|max:250',
+                'mobile' => 'required|unique:leads,mobile',
+                'phone' => 'nullable|unique:leads,phone',
+                'email' => 'required|string|email|max:255|unique:leads,email',
+                'country_id' => 'nullable|exists:countries,id',
+                'state_id' => 'nullable|exists:states,id',
                 'interesting_level_id' => 'required|exists:interesting_levels,id',
                 'lead_source_id' => 'required|exists:lead_sources,id',
+                'Job_title' => 'nullable|string|max:150',
+                'company_name' => 'nullable|string|max:150',
+                'birth_day' => 'nullable|date'
             ]);
 
             if ($validator->fails()) {
@@ -144,10 +150,8 @@ class CourseTrackStudentController extends Controller
             }
 
             $lead = Lead::create([
-                'first_name' => $request->first_name,
-                'middle_name' => $request->middle_name,
-                'last_name' => $request->last_name,
-                'education' => $request->education,
+                'name_en' => $request->name_en,
+                'name_ar' => $request->name_ar,
                 'registration_remark' => $request->registration_remark,
                 'mobile' => $request->mobile,
                 'phone' => $request->phone,
@@ -157,8 +161,28 @@ class CourseTrackStudentController extends Controller
                 'interesting_level_id' => $request->interesting_level_id,
                 'lead_source_id' => $request->lead_source_id,
                 'employee_id' => $request->employee_id,
+                'Job_title' => $request->Job_title,
+                'company_name' => $request->company_name,
+                'birth_day' => $request->birth_day,
                 'is_client' => 1
             ]);
+
+            // file upload
+
+            if($request->hasFile('file'))
+            {
+                $img = $request->file('file');
+                $ext = $img->getClientOriginalExtension();
+                $image_name = $lead->id . "-". $request->file_name . ".$ext";
+                $img->move( public_path('uploads/leads/') , $image_name);
+
+                LeadFile::create([
+                    'name'=>$request->file_name,
+                    'type'=>$ext,
+                    'file'=>$image_name,
+                    'lead_id'=>$lead->id,
+                ]);
+            }
 
             $request_data['lead_id'] = $lead->id;
         }else{
@@ -177,6 +201,10 @@ class CourseTrackStudentController extends Controller
             'employee_id' => $request_data['employee_id'],
             'course_id' => $course_track->course_id,
         ]);
+
+//        $course_track_student->materials()->syncWithoutDetaching($request->materials);
+
+        $course_track_student->catering()->syncWithoutDetaching($request->catering);
 
         $request_data['course_track_student_id'] = $course_track_student->id;
 
@@ -200,7 +228,6 @@ class CourseTrackStudentController extends Controller
         }
 
         CourseTrackStudentPayment::create([
-
             'course_track_student_id' =>   $request_data['course_track_student_id'],
             'payment_date' =>   $request->payment_date,
             'amount' =>   $request->amount,
@@ -210,29 +237,24 @@ class CourseTrackStudentController extends Controller
         if($request_data['2nd_date'] != 'null' && $request_data['2nd_amount'] != 'null')
         {
             CourseTrackStudentPayment::create([
-
                 'course_track_student_id' =>   $request_data['course_track_student_id'],
                 'payment_date' =>   $request_data['2nd_date'],
                 'amount' =>   $request_data['2nd_amount'],
-
             ]);
         }
 
         if($request_data['3rd_date'] != 'null' && $request_data['3rd_amount'] != 'null')
         {
             CourseTrackStudentPayment::create([
-
                 'course_track_student_id' =>   $request_data['course_track_student_id'],
                 'payment_date' =>   $request_data['3rd_date'],
                 'amount' =>   $request_data['3rd_amount'],
-
             ]);
         }
 
         if($request_data['4th_date'] != 'null' && $request_data['4th_amount'] != 'null')
         {
             CourseTrackStudentPayment::create([
-
                 'course_track_student_id' =>   $request_data['course_track_student_id'],
                 'payment_date' =>   $request_data['4th_date'],
                 'amount' =>   $request_data['4th_amount'],
@@ -271,7 +293,12 @@ class CourseTrackStudentController extends Controller
      */
     public function show($id)
     {
-        $course_track_student = CourseTrackStudent::with(['lead','courseTrack','employee','courseTrackStudentPrice','courseTrackStudentDiscount','courseTrackStudentPayment'])->findOrFail($id);
+        $course_track_student = CourseTrackStudent::
+        with(['materials'=>function($q){
+            $q->with('material');
+        },'catering'=>function($q){
+            $q->with('catering');
+        },'lead','courseTrack','employee','courseTrackStudentPrice','courseTrackStudentDiscount','courseTrackStudentPayment'])->findOrFail($id);
 
         return response()->json($course_track_student);
     }

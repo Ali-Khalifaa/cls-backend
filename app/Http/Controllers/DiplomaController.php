@@ -16,7 +16,11 @@ class DiplomaController extends Controller
      */
     public function index()
     {
-        $diplomas =Diploma::with(['diplomaPrices','caterings','courses'])->get();
+        $diplomas =Diploma::with(['diplomaPrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'caterings','courses'])->get()->makeVisible(['catering_ids']);
 
         return response()->json($diplomas);
     }
@@ -70,7 +74,11 @@ class DiplomaController extends Controller
      */
     public function show($id)
     {
-        $diploma = Diploma::with(['courses','vendor','diplomaPrices','courses','traningDiplomas','caterings'])->findOrFail($id);
+        $diploma = Diploma::with(['courses','vendor','diplomaPrices'=>function($q){
+            $q->with(['materials'=>function($qu){
+                $qu->with('material');
+            }]);
+        },'courses','traningDiplomas','caterings'])->findOrFail($id)->makeVisible(['catering_ids']);
 
         return response()->json($diploma);
     }

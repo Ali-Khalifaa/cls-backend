@@ -10,18 +10,14 @@ class CourseTrack extends Model
         'lab_id',
         'course_id',
         'instructor_id',
-        'category_id',
-        'vendor_id',
-        'instructor_hour_cost',
+        'rate_per_hour',
+        'delivery_type_id',
         'start_date',
         'end_date',
-        'registration_last_date',
-        'trainees_allowed_count',
-        'minimum_students_notification',
-        'total_cost',
         'cancel',
-        'is_waiting',
-        'course_type',
+        'is_initial',
+        'category_id',
+        'vendor_id',
     ];
 
     //appends
@@ -135,6 +131,16 @@ class CourseTrack extends Model
     public function evaluationStudent(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EvaluationStudent::class);
+    }
+
+    public function cateringTrack()
+    {
+        return $this->hasMany(CourseTrackCatering::class);
+    }
+
+    public function materialTrack()
+    {
+        return $this->hasMany(CourseTrackMaterial::class);
     }
 
 }

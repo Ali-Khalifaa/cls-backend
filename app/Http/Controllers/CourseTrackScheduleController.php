@@ -133,7 +133,7 @@ class CourseTrackScheduleController extends Controller
             }
         }
 
-        $tempData = date('l', strtotime($request->start_date));
+        $tempData = date('l', strtotime($request->date));
         $day_title = Day::where('day',$tempData)->first();
 
         $course_track = CourseTrack::findOrFail($request->course_track_id);
@@ -248,7 +248,7 @@ class CourseTrackScheduleController extends Controller
             }
         }
 
-        $tempData = date('l', strtotime($request->start_date));
+        $tempData = date('l', strtotime($request->date));
         $day_title = Day::where('day',$tempData)->first();
 
         $course_schedule = CourseTrackSchedule::findOrFail($id);

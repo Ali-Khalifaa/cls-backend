@@ -16,22 +16,19 @@ class CreateInstructorsTable extends Migration
         Schema::create('instructors', function (Blueprint $table) {
 
             $table->id();
-            $table->string('first_name');
-            $table->string('middle_name');
-            $table->string('last_name');
-            $table->string('mobile');
-            $table->string('address');
-            $table->string('phone');
-            $table->string('cv')->nullable();
+            $table->string('name');
+            $table->string('mobile')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->string('email_two')->nullable();
+            $table->text('cls_rate');
+            $table->string('pdf')->nullable();
             $table->string('img')->nullable();
-            $table->double('hour_price',8,2);
-            $table->date('birth_date');
             $table->bigInteger('user_id')->unsigned()->nullable();
             $table->boolean('has_account')->default(0);
             $table->boolean('active')->default(1);
+
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-
-
             $table->timestamps();
         });
     }

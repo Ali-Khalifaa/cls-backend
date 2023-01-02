@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Diploma extends Model
 {
-    public $hidden=['pivot'];
+    public $hidden=['pivot','catering_ids'];
     protected $fillable =[
       'name',
       'category_id',
@@ -19,6 +19,7 @@ class Diploma extends Model
     protected $appends = [
         'count_course',
         'course_hours',
+        'catering_ids'
     ];
 
     //append Count Course
@@ -33,6 +34,13 @@ class Diploma extends Model
     public function getCourseHoursAttribute()
     {
         return $this->courses()->sum('hour_count');
+    }
+
+    //append catering id
+
+    public function getCateringIdsAttribute()
+    {
+        return $this->caterings()->get()->pluck('id')->toArray();
     }
 
     //=============================================================================
@@ -66,7 +74,7 @@ class Diploma extends Model
 
     public function traningDiplomas(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(TraningDiploma::class);
+        return $this->hasMany(TrainingDiploma::class);
     }
 
     public function leadDiplomas(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -113,6 +121,5 @@ class Diploma extends Model
     {
         return $this->hasMany(DiplomaTrackStudent::class);
     }
-
 
 }

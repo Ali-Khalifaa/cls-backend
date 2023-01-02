@@ -20,20 +20,16 @@ class CreateDiplomaTracksTable extends Migration
             $table->bigInteger('instructor_id')->unsigned()->nullable();
             $table->bigInteger('category_id')->unsigned();
             $table->bigInteger('vendor_id')->unsigned();
+            $table->text('rate_per_hour')->nullable();
+            $table->bigInteger('delivery_type_id')->unsigned()->nullable();
 
-            $table->double("instructor_hour_cost",8,2)->default(0);
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->date('registration_last_date');
-            $table->integer('trainees_allowed_count');
-            $table->integer('minimum_students_notification')->default(1);
-            $table->double('total_cost',8,2);
             $table->boolean('cancel')->default(0);
-
-            $table->boolean('is_waiting')->default(0);
-            $table->enum('course_type', ['online','offline','onsite','hybrid'])->default('offline');
+            $table->boolean('is_initial')->default(0);
 
             $table->foreign('diploma_id')->references('id')->on('diplomas')->onDelete('cascade');
+            $table->foreign('delivery_type_id')->references('id')->on('delivery_types')->onDelete('cascade');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('cascade');
             $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');

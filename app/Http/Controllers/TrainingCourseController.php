@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TraningCourse;
+use App\Models\TrainingCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,7 +15,7 @@ class TrainingCourseController extends Controller
      */
     public function trainingCourse($id)
     {
-        $trainingCourse = TraningCourse::with(['instructor','category','vendor','course'])->where('instructor_id',$id)->get();
+        $trainingCourse = TrainingCourse::with(['instructor','currency','instructorPer','category','vendor','course'])->where('instructor_id',$id)->get();
         return response()->json($trainingCourse);
     }
 
@@ -32,8 +32,9 @@ class TrainingCourseController extends Controller
             'category_id' => 'required|exists:categories,id',
             'vendor_id' => 'required|exists:vendors,id',
             'course_id' => 'required|exists:courses,id',
-            'hour_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'active_date' => 'required|date|unique:traning_courses',
+            'instructor_per_id' => 'required|exists:instructor_pers,id',
+            'currency_id' => 'required|exists:currencies,id',
+            'rate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
@@ -41,7 +42,7 @@ class TrainingCourseController extends Controller
             return response()->json($errors,422);
         }
 
-        $trainingCourses = new TraningCourse($request->all());
+        $trainingCourses = new TrainingCourse($request->all());
         $trainingCourses->save();
 
         return response()->json($trainingCourses);
@@ -56,7 +57,7 @@ class TrainingCourseController extends Controller
      */
     public function show($id)
     {
-        $trainingCourses = TraningCourse::where('instructor_id',$id)->get();
+        $trainingCourses = TrainingCourse::where('instructor_id',$id)->get();
 
         return response()->json($trainingCourses);
     }
@@ -75,8 +76,9 @@ class TrainingCourseController extends Controller
             'category_id' => 'required|exists:categories,id',
             'vendor_id' => 'required|exists:vendors,id',
             'course_id' => 'required|exists:courses,id',
-            'hour_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-
+            'instructor_per_id' => 'required|exists:instructor_pers,id',
+            'currency_id' => 'required|exists:currencies,id',
+            'rate' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
@@ -84,19 +86,7 @@ class TrainingCourseController extends Controller
             return response()->json($errors,422);
         }
 
-        $trainingCourses = TraningCourse::findOrFail($id);
-
-        if ($trainingCourses->active_date != $request->active_date)
-        {
-            $validator = Validator::make($request->all(), [
-                'active_date' => 'required|date|unique:traning_diplomas',
-            ]);
-
-            if ($validator->fails()) {
-                $errors = $validator->errors();
-                return response()->json($errors,422);
-            }
-        }
+        $trainingCourses = TrainingCourse::findOrFail($id);
 
         $trainingCourses->update($request->all());
 
@@ -111,7 +101,7 @@ class TrainingCourseController extends Controller
      */
     public function destroy($id)
     {
-        $trainingCourses = TraningCourse::findOrFail($id);
+        $trainingCourses = TrainingCourse::findOrFail($id);
         $trainingCourses->delete();
         return response()->json('deleted success');
     }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
-    public $hidden=['pivot'];
+    public $hidden=['pivot','catering_ids'];
     protected $fillable = [
         'name',
         'category_id',
@@ -18,7 +18,7 @@ class Course extends Model
     ];
 
     protected $appends = [
-        'category_name','vendor_name'
+        'category_name','vendor_name','catering_ids'
     ];
 
     //===============================================================
@@ -35,6 +35,13 @@ class Course extends Model
     public function getVendorNameAttribute()
     {
         return $this->vendor()->get('name')->pluck('name')->first();
+    }
+
+    //append catering id
+
+    public function getCateringIdsAttribute()
+    {
+        return $this->caterings()->get()->pluck('id')->toArray();
     }
 
     //========================================================
@@ -68,7 +75,7 @@ class Course extends Model
 
     public function traningCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(TraningCourse::class);
+        return $this->hasMany(TrainingCourse::class);
     }
 
     public function leadCourses(): \Illuminate\Database\Eloquent\Relations\HasMany

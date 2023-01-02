@@ -15,17 +15,15 @@ class CreateCompanyActivitiesTable extends Migration
     {
         Schema::create('company_activities', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('follow_up');
-            $table->text('notes')->nullable();
-            $table->bigInteger('company_followup_id')->unsigned()->nullable();
-            $table->bigInteger('company_followup_reason_id')->unsigned()->nullable();
-            $table->string('file')->nullable();
+            $table->bigInteger('subject_id')->unsigned()->nullable();
+            $table->date('due_date');
+            $table->text('description')->nullable();
             $table->bigInteger('company_id')->unsigned();
             $table->bigInteger('employee_id')->unsigned();
+            $table->dateTime('close_date')->nullable();
 
 
-            $table->foreign('company_followup_id')->references('id')->on('company_followups')->onDelete('cascade');
-            $table->foreign('company_followup_reason_id')->references('id')->on('company_followup_reasons')->onDelete('cascade');
+            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
             $table->timestamps();

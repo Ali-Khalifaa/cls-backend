@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DiplomaMaterial;
 use App\Models\DiplomaPrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,7 +15,9 @@ class DiplomaPricesController extends Controller
      */
     public function diplomaPrice($id)
     {
-        $diplomaPrice = DiplomaPrice::findOrFail($id);
+        $diplomaPrice = DiplomaPrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->findOrFail($id);
         return response()->json($diplomaPrice);
     }
 
@@ -24,21 +27,19 @@ class DiplomaPricesController extends Controller
 
     public function diplomaPriceNow($id)
     {
-        $diplomaPrices = DiplomaPrice::where('diploma_id',$id)->get();
+        $diplomaPrices = DiplomaPrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('diploma_id',$id)
+            ->whereDate('from_date','<=',now())
+            ->whereDate('active_date','>=',now())->get();
 
-        $data=[];
-        $date = Carbon::now()->toDateString();
-
-        if(count($diplomaPrices) > 0)
+        if (count($diplomaPrices) == 0)
         {
-            foreach ($diplomaPrices as $coursePrice)
-            {
-                if ($coursePrice->active_date >= $date)
-                {
-                    $data[] = $coursePrice;
-                    return response()->json($data);
-                }
-            }
+            $diplomaPrices = [];
+            $Prices = DiplomaPrice::with(['materials'=>function($q){
+                $q->with('material');
+            }])->where('diploma_id',$id)->get()->last();
+            $diplomaPrices[] = $Prices;
         }
         return response()->json($diplomaPrices);
     }
@@ -73,7 +74,9 @@ class DiplomaPricesController extends Controller
             'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
             'from_date' => 'required',
             'active_date' => 'required',
-
+//            'materials' => 'required|array',
+//            'materials.*.material_id' => 'required|exists:materials,id',
+//            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -85,18 +88,15 @@ class DiplomaPricesController extends Controller
         $request_data['active_date'] =$date;
         $request_data['from_date'] =$from_date;
 
-        //check date
-        $diplomas = DiplomaPrice::where('diploma_id',$request->diploma_id)->get();
-        foreach ($diplomas as $diploma)
-        {
-            if ($diploma->active_date == $date)
-            {
-                return response()->json("This date already exists",422);
-            }
-        }
-
         $diplomaPrices = new DiplomaPrice($request_data);
         $diplomaPrices->save();
+//        foreach ($request['materials'] as $material){
+//            DiplomaMaterial::create([
+//                'diploma_price_id' => $diplomaPrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($diplomaPrices);
     }
@@ -109,7 +109,9 @@ class DiplomaPricesController extends Controller
      */
     public function show($id)
     {
-        $diplomaPrices = DiplomaPrice::where('diploma_id',$id)->get();
+        $diplomaPrices = DiplomaPrice::with(['materials'=>function($q){
+            $q->with('material');
+        }])->where('diploma_id',$id)->get();
 
         return response()->json($diplomaPrices);
     }
@@ -125,7 +127,6 @@ class DiplomaPricesController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-
             'diploma_id' => 'required|exists:diplomas,id',
             'before_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
             'after_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
@@ -147,6 +148,9 @@ class DiplomaPricesController extends Controller
             'training_kit' => 'required|regex:/^\d+(\.\d{1,2})?$/',
             'from_date' => 'required',
             'active_date' => 'required',
+//            'materials' => 'required|array',
+//            'materials.*.material_id' => 'required|exists:materials,id',
+//            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
@@ -159,19 +163,20 @@ class DiplomaPricesController extends Controller
         $request_data=$request->all();
         $request_data['active_date'] =$date;
         $request_data['from_date'] =$from_date;
-
-        //check date
-        $diplomas = DiplomaPrice::where('diploma_id',$request->diploma_id)->get();
-        foreach ($diplomas as $diploma)
-        {
-            if ($diploma->active_date == $date)
-            {
-                return response()->json("This date already exists",422);
-            }
-        }
-
         $diplomaPrices = DiplomaPrice::findOrFail($id);
         $diplomaPrices->update($request_data);
+
+//        foreach ($diplomaPrices->materials as $item){
+//            $item->delete();
+//        }
+//
+//        foreach ($request['materials'] as $material){
+//            DiplomaMaterial::create([
+//                'diploma_price_id' => $diplomaPrices->id,
+//                'material_id' => $material['material_id'],
+//                'material_price' => $material['material_price'],
+//            ]);
+//        }
 
         return response()->json($diplomaPrices);
     }

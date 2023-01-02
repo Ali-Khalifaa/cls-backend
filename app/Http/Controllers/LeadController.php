@@ -49,7 +49,10 @@ class LeadController extends Controller
      */
     public function index()
     {
-        $leads = Lead::with(['country','city','interestingLevel','leadSources','leadCourses','leadDiplomas','leadFile'])->where([
+        $leads = Lead::with(['country','city','interestingLevel','leadSources','leadCourses','leadDiplomas','leadFile','leadsFollowup',
+            'leadActivities'=>function($q){
+            $q->with(['subject','employees']);
+        }])->where([
             ['is_client',0],
             ['lead_type',0],
             ['black_list',0],
@@ -365,34 +368,15 @@ class LeadController extends Controller
     }
 
     /**
-     * add to list
-     */
-
-    public function addList(Request $request)
-    {
-        $leads = Lead::findOrFail($request->lead_id);
-        $leads->update([
-            'add_list' => 1,
-            'leads_followup_id' => 1,
-        ]);
-
-        LeadActivity::create([
-            'follow_up' => now(),
-            'leads_followup_id' => 1,
-            'lead_id' =>$request->lead_id,
-            'employee_id' =>$request->employee_id,
-        ]);
-
-        return response()->json("leads add to list");
-    }
-
-    /**
      * get leads by employee id
      */
 
     public function getLeadsEmployee($id)
     {
-        $leads = Lead::with(['country','city','interestingLevel','leadSources','leadCourses','leadDiplomas','leadFile'])->where([
+        $leads = Lead::with(['country','city','interestingLevel','leadSources','leadCourses','leadDiplomas','leadFile','leadsFollowup',
+            'leadActivities'=>function($q){
+            $q->with(['subject','employees']);
+        }])->where([
             ['employee_id','=',$id],
             ['is_client','=',0],
             ['add_placement','=',0],
@@ -401,6 +385,30 @@ class LeadController extends Controller
             ['add_course_sales','=',0],
             ['add_selta','=',0],
             ['add_list','=',0],
+            ['black_list',0],
+        ])->get();
+
+        return response()->json($leads);
+    }
+
+    /**
+     * get leads open task by employee id
+     */
+
+    public function getLeadsOpenTaskEmployee($id)
+    {
+        $leads = Lead::with(['country','city','interestingLevel','leadSources','leadCourses','leadDiplomas','leadFile','leadsFollowup',
+            'leadActivities'=>function($q){
+            $q->with(['subject','employees']);
+        }])->where([
+            ['employee_id','=',$id],
+            ['is_client','=',0],
+            ['add_placement','=',0],
+            ['add_interview_sales','=',0],
+            ['add_interview','=',0],
+            ['add_course_sales','=',0],
+            ['add_selta','=',0],
+            ['add_list','=',1],
             ['black_list',0],
         ])->get();
 
