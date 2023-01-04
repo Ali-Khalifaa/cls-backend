@@ -153,7 +153,7 @@ class InstructorController extends Controller
             'email' => $request->email,
             'email_two' => $request->email_two,
             'cls_rate' => $request->cls_rate,
-            'cv' => $pdf_name,
+            'pdf' => $pdf_name,
             'img' => $image_name,
             'has_account' => $has_account,
             'user_id' => $user_id

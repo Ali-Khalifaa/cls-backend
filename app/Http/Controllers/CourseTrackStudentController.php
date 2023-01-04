@@ -19,30 +19,25 @@ class CourseTrackStudentController extends Controller
     /**
      * get register course track by employee id and course track id
      */
-    public function registerCourseTrackByEmployeeIdAndCourseTrackId($employee_id,$course_track_id)
+    public function registerCourseTrackByEmployeeIdAndCourseTrackId($employee_id, $course_track_id)
     {
-        $course_track_students = CourseTrackStudent::with(['materials'=>function($q){
-            $q->with('material');
-        },'catering'=>function($q){
+        $course_track_students = CourseTrackStudent::with(['catering' => function ($q) {
             $q->with('catering');
-        },'lead','courseTrack','employee','courseTrackStudentPrice','courseTrackStudentDiscount','courseTrackStudentPayment'])->where([
-            ['course_track_id',$course_track_id],
-            ['employee_id',$employee_id],
-            ['cancel',0],
+        }, 'lead', 'courseTrack', 'employee', 'courseTrackStudentPrice', 'courseTrackStudentDiscount', 'courseTrackStudentPayment'])->where([
+            ['course_track_id', $course_track_id],
+            ['employee_id', $employee_id],
+            ['cancel', 0],
         ])->get();
 
-        foreach ($course_track_students as $course_track_student)
-        {
+        foreach ($course_track_students as $course_track_student) {
             $total_paid = 0;
 
-           foreach ($course_track_student->courseTrackStudentPayment as $payment)
-           {
-               if ($payment->checkIs_paid == 1)
-               {
-                   $total_paid += $payment->all_paid;
-               }
+            foreach ($course_track_student->courseTrackStudentPayment as $payment) {
+                if ($payment->checkIs_paid == 1) {
+                    $total_paid += $payment->all_paid;
+                }
 
-           }
+            }
             $course_track_student->total_paid = $total_paid;
         }
 
@@ -61,7 +56,7 @@ class CourseTrackStudentController extends Controller
 
         if ($validator->fails()) {
             $errors = $validator->errors();
-            return response()->json($errors,422);
+            return response()->json($errors, 422);
         }
 
         $course_track_student = CourseTrackStudent::findOrFail($request->course_track_student_id);
@@ -88,7 +83,7 @@ class CourseTrackStudentController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -97,37 +92,16 @@ class CourseTrackStudentController extends Controller
             'lead_id' => 'required',
             'course_track_id' => 'required|exists:course_tracks,id',
             'employee_id' => 'required|exists:employees,id',
-//            'discount_id' => 'required|exists:discounts,id',
-            'payment_date' => 'required|date',
-            // 'amount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            '2nd_date' => 'required|date',
-//            '2nd_amount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            '3rd_date' => 'required|date',
-//            '3rd_amount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-//            '4th_date' => 'required|date',
-//            '4th_amount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'comment' => 'required',
-            // 'final_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            // 'total_discount' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'certificate_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'lab_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'material_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'assignment_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'placement_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'exam_cost' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'application' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'interview' => 'required|regex:/^\d+(\.\d{1,2})?$/',
         ]);
 
         if ($validator->fails()) {
             $errors = $validator->errors();
-            return response()->json($errors,422);
+            return response()->json($errors, 422);
         }
 
         $request_data = $request->all();
 
-        if($request->lead_id == "null")
-        {
+        if ($request->lead_id == "null") {
             $validator = Validator::make($request->all(), [
                 'name_en' => 'required|string|max:150',
                 'name_ar' => 'nullable|string|max:150',
@@ -146,7 +120,7 @@ class CourseTrackStudentController extends Controller
 
             if ($validator->fails()) {
                 $errors = $validator->errors();
-                return response()->json($errors,422);
+                return response()->json($errors, 422);
             }
 
             $lead = Lead::create([
@@ -169,23 +143,22 @@ class CourseTrackStudentController extends Controller
 
             // file upload
 
-            if($request->hasFile('file'))
-            {
+            if ($request->hasFile('file')) {
                 $img = $request->file('file');
                 $ext = $img->getClientOriginalExtension();
-                $image_name = $lead->id . "-". $request->file_name . ".$ext";
-                $img->move( public_path('uploads/leads/') , $image_name);
+                $image_name = $lead->id . "-" . $request->file_name . ".$ext";
+                $img->move(public_path('uploads/leads/'), $image_name);
 
                 LeadFile::create([
-                    'name'=>$request->file_name,
-                    'type'=>$ext,
-                    'file'=>$image_name,
-                    'lead_id'=>$lead->id,
+                    'name' => $request->file_name,
+                    'type' => $ext,
+                    'file' => $image_name,
+                    'lead_id' => $lead->id,
                 ]);
             }
 
             $request_data['lead_id'] = $lead->id;
-        }else{
+        } else {
 
             $lead = Lead::findOrFail($request->lead_id);
             $lead->update([
@@ -203,22 +176,44 @@ class CourseTrackStudentController extends Controller
         ]);
 
 //        $course_track_student->materials()->syncWithoutDetaching($request->materials);
-
-        $course_track_student->catering()->syncWithoutDetaching($request->catering);
-
+        if ($request->catering !== null && $request->catering !== "null" && $request->catering !== "undefined"){
+            $catering_ids = preg_split("/[,]/", $request->catering);
+            $course_track_student->catering()->syncWithoutDetaching($catering_ids);
+        }
         $request_data['course_track_student_id'] = $course_track_student->id;
 
-        $course_track_student_price = CourseTrackStudentPrice::create($request_data);
+
+        $course_track_student_price = CourseTrackStudentPrice::create([
+            'course_track_student_id' => $request_data['course_track_student_id'],
+            'final_price' => $request_data['final_price'] == "null" || $request_data['final_price'] == "undefined" ? 0 : $request_data['final_price'],
+            'total_discount' => $request_data['total_discount'] == "null" || $request_data['total_discount'] == "undefined" ? 0 : $request_data['total_discount'],
+            'course_price' => $request_data['price'] == "null" || $request_data['price'] == "undefined" ? 0 : $request_data['price'],
+            'corporate' => $request_data['corporate'] == "null" || $request_data['corporate'] == "undefined" ? 0 : $request_data['corporate'],
+            'private' => $request_data['private'] == "null" || $request_data['private'] == "undefined" ? 0 : $request_data['private'],
+            'online' => $request_data['online'] == "null" || $request_data['online'] == "undefined" ? 0 : $request_data['online'],
+            'protocol' => $request_data['protocol'] == "null" || $request_data['protocol'] == "undefined" ? 0 : $request_data['protocol'],
+            'corporate_group' => $request_data['corporate_group'] == "null" || $request_data['corporate_group'] == "undefined" ? 0 : $request_data['corporate_group'],
+            'official' => $request_data['official'] == "null" || $request_data['official'] == "undefined" ? 0 : $request_data['official'],
+            'soft_copy_cd' => $request_data['soft_copy_cd'] == "null" || $request_data['soft_copy_cd'] == "undefined" ? 0 : $request_data['soft_copy_cd'],
+            'soft_copy_flash_memory' => $request_data['soft_copy_flash_memory'] == "null" || $request_data['soft_copy_flash_memory'] == "undefined" ? 0 : $request_data['soft_copy_flash_memory'],
+            'hard_copy' => $request_data['hard_copy'] == "null" || $request_data['hard_copy'] == "undefined" ? 0 : $request_data['hard_copy'],
+            'lab_virtual' => $request_data['lab_virtual'] == "null" || $request_data['lab_virtual'] == "undefined" ? 0 : $request_data['lab_virtual'],
+            'membership_price' => $request_data['membership_price'] == "null" || $request_data['membership_price'] == "undefined" ? 0 : $request_data['membership_price'],
+            'application_price' => $request_data['application_price'] == "null" || $request_data['application_price'] == "undefined" ? 0 : $request_data['application_price'],
+            'exam_price' => $request_data['exam_price'] == "null" || $request_data['exam_price'] == "undefined" ? 0 : $request_data['exam_price'],
+            'block_note' => $request_data['block_note'] == "null" || $request_data['block_note'] == "undefined" ? 0 : $request_data['block_note'],
+            'pen' => $request_data['pen'] == "null" || $request_data['pen'] == "undefined" ? 0 : $request_data['pen'],
+            'training_kit' => $request_data['training_kit'] == "null" || $request_data['training_kit'] == "undefined" ? 0 : $request_data['training_kit'],
+        ]);
+
         //replase boolean
 
-        $tempData = str_replace("\\", "",$request->discounts);
+        $tempData = str_replace("\\", "", $request->discounts);
 
         $request_data['discounts'] = json_decode($tempData);
 
-        if (count($request_data['discounts']) > 0)
-        {
-            foreach ($request_data['discounts'] as $discount)
-            {
+        if (count($request_data['discounts']) > 0) {
+            foreach ($request_data['discounts'] as $discount) {
                 $course_track_student_discount = CourseTrackStudentDiscount::create([
                     'course_track_student_id' => $course_track_student->id,
                     'discount_id' => $discount->id,
@@ -228,36 +223,33 @@ class CourseTrackStudentController extends Controller
         }
 
         CourseTrackStudentPayment::create([
-            'course_track_student_id' =>   $request_data['course_track_student_id'],
-            'payment_date' =>   $request->payment_date,
-            'amount' =>   $request->amount,
+            'course_track_student_id' => $request_data['course_track_student_id'],
+            'payment_date' => $request->payment_date,
+            'amount' => $request->amount,
             'comment' => $request->comment,
         ]);
 
-        if($request_data['2nd_date'] != 'null' && $request_data['2nd_amount'] != 'null')
-        {
+        if ($request_data['2nd_date'] != 'null' && $request_data['2nd_amount'] != 'null') {
             CourseTrackStudentPayment::create([
-                'course_track_student_id' =>   $request_data['course_track_student_id'],
-                'payment_date' =>   $request_data['2nd_date'],
-                'amount' =>   $request_data['2nd_amount'],
+                'course_track_student_id' => $request_data['course_track_student_id'],
+                'payment_date' => $request_data['2nd_date'],
+                'amount' => $request_data['2nd_amount'],
             ]);
         }
 
-        if($request_data['3rd_date'] != 'null' && $request_data['3rd_amount'] != 'null')
-        {
+        if ($request_data['3rd_date'] != 'null' && $request_data['3rd_amount'] != 'null') {
             CourseTrackStudentPayment::create([
-                'course_track_student_id' =>   $request_data['course_track_student_id'],
-                'payment_date' =>   $request_data['3rd_date'],
-                'amount' =>   $request_data['3rd_amount'],
+                'course_track_student_id' => $request_data['course_track_student_id'],
+                'payment_date' => $request_data['3rd_date'],
+                'amount' => $request_data['3rd_amount'],
             ]);
         }
 
-        if($request_data['4th_date'] != 'null' && $request_data['4th_amount'] != 'null')
-        {
+        if ($request_data['4th_date'] != 'null' && $request_data['4th_amount'] != 'null') {
             CourseTrackStudentPayment::create([
-                'course_track_student_id' =>   $request_data['course_track_student_id'],
-                'payment_date' =>   $request_data['4th_date'],
-                'amount' =>   $request_data['4th_amount'],
+                'course_track_student_id' => $request_data['course_track_student_id'],
+                'payment_date' => $request_data['4th_date'],
+                'amount' => $request_data['4th_amount'],
             ]);
         }
 
@@ -278,27 +270,24 @@ class CourseTrackStudentController extends Controller
 //                    'achievement' => $achievement
 //                ]);
 //            }
-//
 //        }
-
-
         return response()->json($course_track_student);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
         $course_track_student = CourseTrackStudent::
-        with(['materials'=>function($q){
+        with(['materials' => function ($q) {
             $q->with('material');
-        },'catering'=>function($q){
+        }, 'catering' => function ($q) {
             $q->with('catering');
-        },'lead','courseTrack','employee','courseTrackStudentPrice','courseTrackStudentDiscount','courseTrackStudentPayment'])->findOrFail($id);
+        }, 'lead', 'courseTrack', 'employee', 'courseTrackStudentPrice', 'courseTrackStudentDiscount', 'courseTrackStudentPayment'])->findOrFail($id);
 
         return response()->json($course_track_student);
     }
@@ -306,30 +295,27 @@ class CourseTrackStudentController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'course_track_id' => 'required|exists:course_tracks,id',
-            'final_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'payment_additional_amount' => 'regex:/^\d+(\.\d{1,2})?$/',
+//            'final_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+//            'payment_additional_amount' => 'regex:/^\d+(\.\d{1,2})?$/',
         ]);
         if ($validator->fails()) {
             $errors = $validator->errors();
-            return response()->json($errors,422);
+            return response()->json($errors, 422);
         }
         $course_track_student = CourseTrackStudent::findOrFail($id);
 
         $payments = $course_track_student->courseTrackStudentPayment;
-        if (count($payments) > 0)
-        {
-            foreach ($payments as $payment)
-            {
-                if ($payment->checkIs_paid == 0)
-                {
+        if (count($payments) > 0) {
+            foreach ($payments as $payment) {
+                if ($payment->checkIs_paid == 0) {
                     $payment->delete();
                 }
             }
@@ -337,28 +323,21 @@ class CourseTrackStudentController extends Controller
 
         $discounts = $course_track_student->courseTrackStudentDiscount;
 
-        if (count($discounts) > 0)
-        {
-            foreach ($discounts as $discount)
-            {
+        if (count($discounts) > 0) {
+            foreach ($discounts as $discount) {
                 $discount->delete();
             }
         }
-
-         $course_track_student->courseTrackStudentPrice->update([
-            'final_price' =>$request->final_price,
-            'total_discount' =>0,
-        ]);
 
         $course_track_student->update([
             'course_track_id' => $request->course_track_id,
         ]);
 
-        $studentsPayment = CourseTrackStudentPayment::create([
+        CourseTrackStudentPayment::create([
             'payment_date' => now(),
-            'amount' => $request->final_price,
+            'amount' => $course_track_student->courseTrackStudentPrice->final_price,
             'course_track_student_id' => $course_track_student->id,
-            'payment_additional_amount' => $request->payment_additional_amount,
+            'payment_additional_amount' => 0,
             'comment' => intval($request->comment),
         ]);
 
@@ -368,7 +347,7 @@ class CourseTrackStudentController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
@@ -382,21 +361,17 @@ class CourseTrackStudentController extends Controller
     public function studentAttendanceCourseTrack($course_track_id)
     {
         $course_track_students = CourseTrackStudent::with('lead')->where([
-            ['course_track_id',$course_track_id],
-            ['cancel',0],
+            ['course_track_id', $course_track_id],
+            ['cancel', 0],
         ])->get();
 
-        foreach ($course_track_students as $course_track_student)
-        {
+        foreach ($course_track_students as $course_track_student) {
             $course_track_student->traineesAttendanceCourse;
             $course_track_student->attendance = 0;
-            foreach ($course_track_student->traineesAttendanceCourse as $student)
-            {
-                if ($student->attendance == 1)
-                {
+            foreach ($course_track_student->traineesAttendanceCourse as $student) {
+                if ($student->attendance == 1) {
                     $course_track_student->attendance = 1;
-                }else
-                {
+                } else {
                     $course_track_student->attendance = 0;
                 }
             }
@@ -404,7 +379,4 @@ class CourseTrackStudentController extends Controller
 
         return response()->json($course_track_students);
     }
-
-
-
 }

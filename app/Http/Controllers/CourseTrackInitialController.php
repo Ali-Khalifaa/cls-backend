@@ -27,9 +27,7 @@ class CourseTrackInitialController extends Controller
         $courses = CourseTrack::where('is_initial',1)
             ->with(['course','category','vendor','courseTrackCost','cateringTrack'=>function($q){
                 $q->with('catering');
-            },'materialTrack'=>function($qu){
-                $qu->with('material');
-            },'courseTrackDay','courseTrackSchedule'])->get();
+            },'courseTrackDay','courseTrackDay','courseTrackSchedule'])->get();
 
         return response()->json($courses);
 
@@ -303,9 +301,7 @@ class CourseTrackInitialController extends Controller
         $courses = CourseTrack::where('is_initial',1)
             ->with(['course','category','vendor','courseTrackCost','cateringTrack'=>function($q){
                 $q->with('catering');
-            },'materialTrack'=>function($qu){
-                $qu->with('material');
-            },'courseTrackDay','courseTrackSchedule'])->findOrFail($id);
+            },'courseTrackDay','courseTrackSchedule'])->withCount(['courseTrackSchedule'])->findOrFail($id);
 
         return response()->json($courses);
     }
@@ -429,9 +425,9 @@ class CourseTrackInitialController extends Controller
             'block_note' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
             'pen' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
             'training_kit' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
-            'catering' => 'required|array',
-            'catering.*.catering_id' => 'required|exists:caterings,id',
-            'catering.*.catering_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+//            'catering' => 'required|array',
+//            'catering.*.catering_id' => 'required|exists:caterings,id',
+//            'catering.*.catering_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
 //            'materials' => 'required|array',
 //            'materials.*.material_id' => 'required|exists:materials,id',
 //            'materials.*.material_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
@@ -466,24 +462,24 @@ class CourseTrackInitialController extends Controller
             'training_kit' => $request->training_kit,
         ]);
 
-        foreach ($request['catering'] as $catering){
-
-            $course_catering = CourseTrackCatering::where([
-                ['course_track_id',$id],
-                ['catering_id',$catering['catering_id']],
-            ])->first();
-            if ($course_catering){
-                $course_catering->update([
-                    'catering_price' => $catering['catering_price'],
-                ]);
-            }else{
-                CourseTrackCatering::create([
-                    'course_track_id' => $course_track->id,
-                    'catering_id' => $catering['catering_id'],
-                    'catering_price' => $catering['catering_price'],
-                ]);
-            }
-        }
+//        foreach ($request['catering'] as $catering){
+//
+//            $course_catering = CourseTrackCatering::where([
+//                ['course_track_id',$id],
+//                ['catering_id',$catering['catering_id']],
+//            ])->first();
+//            if ($course_catering){
+//                $course_catering->update([
+//                    'catering_price' => $catering['catering_price'],
+//                ]);
+//            }else{
+//                CourseTrackCatering::create([
+//                    'course_track_id' => $course_track->id,
+//                    'catering_id' => $catering['catering_id'],
+//                    'catering_price' => $catering['catering_price'],
+//                ]);
+//            }
+//        }
 
 //        foreach ($request['materials'] as $material){
 //

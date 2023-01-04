@@ -27,10 +27,15 @@ class DiplomaTrack extends Model
         ,'name'
         ,'diploma_hours'
         ,'remaining_hours'
+        ,'days'
     ];
 
     //============== appends ===========
 
+    public function getDaysAttribute()
+    {
+        return $this->diplomaTrackDay()->get('day_id')->pluck('day_id');
+    }
 
     public function getTraineesAttribute(): string
     {

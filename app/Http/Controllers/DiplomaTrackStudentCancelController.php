@@ -39,7 +39,7 @@ class DiplomaTrackStudentCancelController extends Controller
             return response()->json($errors,422);
         }
 
-        $course_track_student = DiplomaTrackStudent::findOrFail($request->course_track_student_id);
+        $course_track_student = DiplomaTrackStudent::findOrFail($request->diploma_track_student_id);
 
         $course_track_student->update([
             'cancel' => 1,

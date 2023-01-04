@@ -27,9 +27,15 @@ class CourseTrack extends Model
         ,'course_hours'
         ,'remaining_hours'
         ,'name'
+        ,'days'
     ];
 
     //============== appends ===========
+
+    public function getDaysAttribute()
+    {
+        return $this->courseTrackDay()->get('day_id')->pluck('day_id');
+    }
 
     public function getCourseHoursAttribute()
     {
